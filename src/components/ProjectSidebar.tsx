@@ -44,7 +44,7 @@ export function ProjectSidebar() {
 		<div className="w-80 h-full bg-background border-r border-border flex flex-col">
 			{/* Header */}
 			<div className="p-4 border-b border-border">
-				<h2 className="text-lg font-semibold mb-3">Dialog Tree Manager</h2>
+				<h2 className="text-lg font-semibold mb-3">Stellar Dialog Tree Manager</h2>
 
 				{/* New Project */}
 				{!state.currentProject ? (
