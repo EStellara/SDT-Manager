@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import {
 	ReactFlow,
 	MiniMap,
@@ -39,8 +39,7 @@ export function DialogTreeEditor() {
 	const [undoStack, setUndoStack] = useState<any[]>([]);
 	const [redoStack, setRedoStack] = useState<any[]>([]);
 	const [hasRecoveryData, setHasRecoveryData] = useState(false);
-
-	// Check for recovery data on component mount
+	const isUpdatingPosition = useRef(false); // Check for recovery data on component mount
 	useEffect(() => {
 		const backupData = localStorage.getItem("sdt_autosave_backup");
 		if (backupData && !state.currentProject) {
@@ -249,53 +248,61 @@ export function DialogTreeEditor() {
 		saveStateForUndo,
 	]);
 
+	// Define addNewNodeAtPosition before handleDrop so it can be used in the dependency array
+	const addNewNodeAtPosition = useCallback(
+		(type: DialogNodeType["type"], position: { x: number; y: number }) => {
+			const nodeId = uuidv4();
+			const titles = {
+				npc: "NPC Dialog",
+				player_choice: "Player Choice",
+				conditional: "Conditional Branch",
+				action: "Action",
+				end: "End Dialog",
+			};
+
+			const newNode: DialogNodeType = {
+				id: nodeId,
+				type,
+				position,
+				data: {
+					title: titles[type],
+					content: type === "npc" ? "Hello, how can I help you?" : undefined,
+					choices: type === "player_choice" ? [{ id: uuidv4(), text: "Option 1" }] : undefined,
+				},
+			};
+
+			saveStateForUndo();
+			addNode(newNode);
+			setHasUnsavedChanges(true);
+			setSelectedNode(newNode);
+		},
+		[saveStateForUndo, addNode]
+	);
+
 	// Handle drag and drop from palette
-	const handleDrop = useCallback((event: React.DragEvent) => {
-		event.preventDefault();
+	const handleDrop = useCallback(
+		(event: React.DragEvent) => {
+			event.preventDefault();
 
-		const reactFlowBounds = event.currentTarget.getBoundingClientRect();
-		const type = event.dataTransfer.getData("application/reactflow");
+			const reactFlowBounds = event.currentTarget.getBoundingClientRect();
+			const type = event.dataTransfer.getData("application/reactflow");
 
-		if (!type) return;
+			if (!type) return;
 
-		const position = {
-			x: event.clientX - reactFlowBounds.left,
-			y: event.clientY - reactFlowBounds.top,
-		};
+			const position = {
+				x: event.clientX - reactFlowBounds.left,
+				y: event.clientY - reactFlowBounds.top,
+			};
 
-		addNewNodeAtPosition(type as DialogNodeType["type"], position);
-	}, []);
+			addNewNodeAtPosition(type as DialogNodeType["type"], position);
+		},
+		[addNewNodeAtPosition]
+	);
 
 	const handleDragOver = useCallback((event: React.DragEvent) => {
 		event.preventDefault();
 		event.dataTransfer.dropEffect = "move";
 	}, []);
-	const addNewNodeAtPosition = (type: DialogNodeType["type"], position: { x: number; y: number }) => {
-		const nodeId = uuidv4();
-		const titles = {
-			npc: "NPC Dialog",
-			player_choice: "Player Choice",
-			conditional: "Conditional Branch",
-			action: "Action",
-			end: "End Dialog",
-		};
-
-		const newNode: DialogNodeType = {
-			id: nodeId,
-			type,
-			position,
-			data: {
-				title: titles[type],
-				content: type === "npc" ? "Hello, how can I help you?" : undefined,
-				choices: type === "player_choice" ? [{ id: uuidv4(), text: "Option 1" }] : undefined,
-			},
-		};
-
-		saveStateForUndo();
-		addNode(newNode);
-		setHasUnsavedChanges(true);
-		setSelectedNode(newNode);
-	};
 
 	// Convert our dialog nodes to ReactFlow nodes
 	const flowNodes: Node[] = useMemo(() => {
@@ -329,24 +336,25 @@ export function DialogTreeEditor() {
 		}));
 	}, [currentTree]);
 	const [nodes, setNodes] = useNodesState(flowNodes);
-	const [edges, setEdges] = useEdgesState(flowEdges);
-
-	// Update local state when currentTree changes
+	const [edges, setEdges] = useEdgesState(flowEdges); // Update local state when currentTree changes, but preserve drag state
 	React.useEffect(() => {
-		setNodes(flowNodes);
+		// Don't update nodes if we're currently processing position updates
+		if (!isUpdatingPosition.current) {
+			setNodes(flowNodes);
+		}
 		setEdges(flowEdges);
-		setHasUnsavedChanges(false);
-	}, [flowNodes, flowEdges, setNodes, setEdges]);
-
-	// Handle node changes (including position updates)
+	}, [flowNodes, flowEdges, setNodes, setEdges]); // Handle node changes (including position updates)
 	const handleNodesChange = useCallback(
 		(changes: NodeChange[]) => {
 			const updatedNodes = applyNodeChanges(changes, nodes);
 			setNodes(updatedNodes);
 
-			// Check for position changes and update the project
-			const positionChanges = changes.filter((change) => change.type === "position" && change.position);
-			if (positionChanges.length > 0 && currentTree) {
+			// Check for position changes and update the project only when dragging is finished
+			const positionChanges = changes.filter(
+				(change) => change.type === "position" && change.position && change.dragging === false
+			);
+			if (positionChanges.length > 0 && currentTree && !isUpdatingPosition.current) {
+				isUpdatingPosition.current = true;
 				positionChanges.forEach((change) => {
 					if (change.type === "position" && change.position) {
 						const nodeToUpdate = currentTree.nodes.find((n) => n.id === change.id);
@@ -355,6 +363,11 @@ export function DialogTreeEditor() {
 						}
 					}
 				});
+				setHasUnsavedChanges(true);
+				// Reset the flag after a brief delay to allow state updates to complete
+				setTimeout(() => {
+					isUpdatingPosition.current = false;
+				}, 100);
 			}
 
 			// Check for deletion changes
@@ -365,9 +378,8 @@ export function DialogTreeEditor() {
 						deleteNode(change.id);
 					}
 				});
+				setHasUnsavedChanges(true);
 			}
-
-			setHasUnsavedChanges(true);
 		},
 		[nodes, setNodes, currentTree, updateNode, deleteNode]
 	);
@@ -433,7 +445,6 @@ export function DialogTreeEditor() {
 		},
 		[edges, setEdges, currentTree, state.selectedTreeId, dispatch]
 	);
-
 	const onNodeClick = useCallback(
 		(_event: React.MouseEvent, node: Node) => {
 			// Find the corresponding DialogNodeType
@@ -460,16 +471,17 @@ export function DialogTreeEditor() {
 			let x = 100;
 			let y = 100;
 
-			// Simple positioning logic to avoid overlaps
+			// Improved positioning logic to accommodate variable node sizes
 			if (existingPositions.length > 0) {
 				const lastNode = existingPositions[existingPositions.length - 1];
-				x = lastNode.x + 250;
+				x = lastNode.x + 350; // Increased spacing from 250 to 350
 				y = lastNode.y;
 
 				// Wrap to next row if too far right
-				if (x > 800) {
+				if (x > 900) {
+					// Increased threshold from 800 to 900
 					x = 100;
-					y = lastNode.y + 200;
+					y = lastNode.y + 250; // Increased vertical spacing from 200 to 250
 				}
 			}
 
@@ -736,7 +748,7 @@ export function DialogTreeEditor() {
 						Last saved: {lastSaveTime.toLocaleTimeString()}
 					</div>
 				</div>{" "}
-				{/* React Flow */}
+				{/* React Flow */}{" "}
 				<ReactFlow
 					nodes={nodes}
 					edges={edges}

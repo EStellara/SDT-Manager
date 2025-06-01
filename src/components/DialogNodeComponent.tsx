@@ -53,16 +53,20 @@ export function DialogNodeComponent({ data, selected }: NodeProps) {
 	const Icon = config.icon;
 
 	return (
-		<div className="min-w-[200px] max-w-[300px]">
+		<div className="min-w-[200px] max-w-[500px] w-auto">
 			{/* Input Handle */}
 			<Handle type="target" position={Position.Top} className="w-3 h-3 bg-border border-2 border-background" />
-			<Card className={`${selected ? "ring-2 ring-primary" : ""} ${config.borderColor} border-2`}>
+			<Card
+				className={`${selected ? "ring-2 ring-primary shadow-lg scale-105" : ""} ${
+					config.borderColor
+				} border-2 cursor-pointer transition-all duration-200 hover:shadow-md`}
+			>
 				<CardHeader className="pb-2">
 					<CardTitle className="flex items-center gap-2 text-sm">
 						<div className={`p-1 rounded ${config.color} text-white`}>
 							<Icon className="w-3 h-3" />
 						</div>{" "}
-						<span className="truncate">{nodeData.title}</span>
+						<span className="font-medium">{nodeData.title}</span>
 						<Edit3 className="w-3 h-3 ml-auto text-muted-foreground" />
 					</CardTitle>
 				</CardHeader>
@@ -76,24 +80,23 @@ export function DialogNodeComponent({ data, selected }: NodeProps) {
 					)}
 
 					{/* Content */}
-					{nodeData.content && <p className="text-xs text-foreground line-clamp-3">{nodeData.content}</p>}
+					{nodeData.content && (
+						<p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+							{nodeData.content}
+						</p>
+					)}
 
 					{/* Player Choices */}
 					{nodeData.choices && nodeData.choices.length > 0 && (
 						<div className="space-y-1">
-							{nodeData.choices.slice(0, 3).map((choice, index) => (
+							{nodeData.choices.map((choice, index) => (
 								<div
 									key={choice.id}
-									className="text-xs text-muted-foreground bg-secondary/50 p-1 rounded"
+									className="text-xs text-muted-foreground bg-secondary/50 p-2 rounded border"
 								>
-									{index + 1}. {choice.text}
+									<span className="font-medium">{index + 1}.</span> {choice.text}
 								</div>
 							))}
-							{nodeData.choices.length > 3 && (
-								<div className="text-xs text-muted-foreground">
-									+{nodeData.choices.length - 3} more choices
-								</div>
-							)}
 						</div>
 					)}
 
@@ -114,20 +117,25 @@ export function DialogNodeComponent({ data, selected }: NodeProps) {
 			</Card>{" "}
 			{/* Output Handles */}
 			{nodeData.nodeType === "player_choice" && nodeData.choices ? (
-				// Multiple handles for player choices
-				nodeData.choices.map((choice, index) => (
-					<Handle
-						key={choice.id}
-						type="source"
-						position={Position.Bottom}
-						id={choice.id}
-						style={{
-							left: `${20 + index * 60}%`,
-							transform: "translateX(-50%)",
-						}}
-						className="w-2 h-2 bg-green-500 border border-background"
-					/>
-				))
+				// Multiple handles for player choices - distributed evenly across the bottom
+				nodeData.choices.map((choice, index) => {
+					const totalChoices = nodeData.choices!.length;
+					const spacing = totalChoices === 1 ? 50 : (80 / (totalChoices - 1)) * index + 10;
+
+					return (
+						<Handle
+							key={choice.id}
+							type="source"
+							position={Position.Bottom}
+							id={choice.id}
+							style={{
+								left: totalChoices === 1 ? "50%" : `${spacing}%`,
+								transform: "translateX(-50%)",
+							}}
+							className="w-2 h-2 bg-green-500 border border-background"
+						/>
+					);
+				})
 			) : nodeData.nodeType === "conditional" ? (
 				// Two handles for conditional (true/false)
 				<>

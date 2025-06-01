@@ -72,7 +72,7 @@ export function CharacterModal({ character, isOpen, onClose, onSave }: Character
 		displayName: character?.displayName || "",
 		description: character?.description || "",
 		color: character?.color || defaultColors[0],
-		role: character?.role || "",
+		role: character?.role || undefined,
 		personality: character?.personality || [],
 		voiceProfile: {
 			tone: character?.voiceProfile?.tone || "",
@@ -86,7 +86,8 @@ export function CharacterModal({ character, isOpen, onClose, onSave }: Character
 	const handleSave = () => {
 		if (!formData.name?.trim()) return;
 
-		const now = new Date();		const characterData: Character = {
+		const now = new Date();
+		const characterData: Character = {
 			id: character?.id || uuidv4(),
 			name: formData.name.trim(),
 			displayName: formData.displayName?.trim() || formData.name.trim(),
@@ -198,9 +199,9 @@ export function CharacterModal({ character, isOpen, onClose, onSave }: Character
 							</div>
 
 							<div className="space-y-2">
-								<Label htmlFor="role">Role</Label>
+								<Label htmlFor="role">Role</Label>{" "}
 								<Select
-									value={formData.role}
+									value={formData.role || ""}
 									onValueChange={(value) => setFormData((prev) => ({ ...prev, role: value }))}
 								>
 									<SelectTrigger>
