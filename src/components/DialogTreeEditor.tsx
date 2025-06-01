@@ -247,53 +247,61 @@ export function DialogTreeEditor() {
 		saveStateForUndo,
 	]);
 
+	// Define addNewNodeAtPosition before handleDrop so it can be used in the dependency array
+	const addNewNodeAtPosition = useCallback(
+		(type: DialogNodeType["type"], position: { x: number; y: number }) => {
+			const nodeId = uuidv4();
+			const titles = {
+				npc: "NPC Dialog",
+				player_choice: "Player Choice",
+				conditional: "Conditional Branch",
+				action: "Action",
+				end: "End Dialog",
+			};
+
+			const newNode: DialogNodeType = {
+				id: nodeId,
+				type,
+				position,
+				data: {
+					title: titles[type],
+					content: type === "npc" ? "Hello, how can I help you?" : undefined,
+					choices: type === "player_choice" ? [{ id: uuidv4(), text: "Option 1" }] : undefined,
+				},
+			};
+
+			saveStateForUndo();
+			addNode(newNode);
+			setHasUnsavedChanges(true);
+			setSelectedNode(newNode);
+		},
+		[saveStateForUndo, addNode]
+	);
+
 	// Handle drag and drop from palette
-	const handleDrop = useCallback((event: React.DragEvent) => {
-		event.preventDefault();
+	const handleDrop = useCallback(
+		(event: React.DragEvent) => {
+			event.preventDefault();
 
-		const reactFlowBounds = event.currentTarget.getBoundingClientRect();
-		const type = event.dataTransfer.getData("application/reactflow");
+			const reactFlowBounds = event.currentTarget.getBoundingClientRect();
+			const type = event.dataTransfer.getData("application/reactflow");
 
-		if (!type) return;
+			if (!type) return;
 
-		const position = {
-			x: event.clientX - reactFlowBounds.left,
-			y: event.clientY - reactFlowBounds.top,
-		};
+			const position = {
+				x: event.clientX - reactFlowBounds.left,
+				y: event.clientY - reactFlowBounds.top,
+			};
 
-		addNewNodeAtPosition(type as DialogNodeType["type"], position);
-	}, []);
+			addNewNodeAtPosition(type as DialogNodeType["type"], position);
+		},
+		[addNewNodeAtPosition]
+	);
 
 	const handleDragOver = useCallback((event: React.DragEvent) => {
 		event.preventDefault();
 		event.dataTransfer.dropEffect = "move";
 	}, []);
-	const addNewNodeAtPosition = (type: DialogNodeType["type"], position: { x: number; y: number }) => {
-		const nodeId = uuidv4();
-		const titles = {
-			npc: "NPC Dialog",
-			player_choice: "Player Choice",
-			conditional: "Conditional Branch",
-			action: "Action",
-			end: "End Dialog",
-		};
-
-		const newNode: DialogNodeType = {
-			id: nodeId,
-			type,
-			position,
-			data: {
-				title: titles[type],
-				content: type === "npc" ? "Hello, how can I help you?" : undefined,
-				choices: type === "player_choice" ? [{ id: uuidv4(), text: "Option 1" }] : undefined,
-			},
-		};
-
-		saveStateForUndo();
-		addNode(newNode);
-		setHasUnsavedChanges(true);
-		setSelectedNode(newNode);
-	};
 
 	// Convert our dialog nodes to ReactFlow nodes
 	const flowNodes: Node[] = useMemo(() => {
