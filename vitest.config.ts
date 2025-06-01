@@ -9,10 +9,14 @@ export default defineConfig({
 		globals: true,
 		environment: 'jsdom',
 		setupFiles: ['./src/test/setup.ts'],
+		pool: 'forks',
 	},
 	resolve: {
 		alias: {
 			'@': path.resolve(__dirname, './src'),
 		},
+	},
+	define: {
+		global: 'globalThis',
 	},
 })

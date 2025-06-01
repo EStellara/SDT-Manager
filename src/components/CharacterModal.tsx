@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Plus, Palette, User, Mic } from "lucide-react";
 import type { Character } from "@/types/dialog";
+import { v4 as uuidv4 } from "uuid";
 
 interface CharacterModalProps {
 	character?: Character;
@@ -85,9 +86,8 @@ export function CharacterModal({ character, isOpen, onClose, onSave }: Character
 	const handleSave = () => {
 		if (!formData.name?.trim()) return;
 
-		const now = new Date();
-		const characterData: Character = {
-			id: character?.id || crypto.randomUUID(),
+		const now = new Date();		const characterData: Character = {
+			id: character?.id || uuidv4(),
 			name: formData.name.trim(),
 			displayName: formData.displayName?.trim() || formData.name.trim(),
 			description: formData.description?.trim(),
