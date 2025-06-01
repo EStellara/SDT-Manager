@@ -56,7 +56,11 @@ export function DialogNodeComponent({ data, selected }: NodeProps) {
 		<div className="min-w-[200px] max-w-[300px]">
 			{/* Input Handle */}
 			<Handle type="target" position={Position.Top} className="w-3 h-3 bg-border border-2 border-background" />
-			<Card className={`${selected ? "ring-2 ring-primary" : ""} ${config.borderColor} border-2`}>
+			<Card
+				className={`${selected ? "ring-2 ring-primary shadow-lg scale-105" : ""} ${
+					config.borderColor
+				} border-2 cursor-pointer transition-all duration-200 hover:shadow-md`}
+			>
 				<CardHeader className="pb-2">
 					<CardTitle className="flex items-center gap-2 text-sm">
 						<div className={`p-1 rounded ${config.color} text-white`}>

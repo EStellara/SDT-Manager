@@ -38,9 +38,7 @@ export function DialogTreeEditor() {
 	const [copiedNode, setCopiedNode] = useState<DialogNodeType | null>(null);
 	const [undoStack, setUndoStack] = useState<any[]>([]);
 	const [redoStack, setRedoStack] = useState<any[]>([]);
-	const [hasRecoveryData, setHasRecoveryData] = useState(false);
-
-	// Check for recovery data on component mount
+	const [hasRecoveryData, setHasRecoveryData] = useState(false); // Check for recovery data on component mount
 	useEffect(() => {
 		const backupData = localStorage.getItem("sdt_autosave_backup");
 		if (backupData && !state.currentProject) {
@@ -433,7 +431,6 @@ export function DialogTreeEditor() {
 		},
 		[edges, setEdges, currentTree, state.selectedTreeId, dispatch]
 	);
-
 	const onNodeClick = useCallback(
 		(_event: React.MouseEvent, node: Node) => {
 			// Find the corresponding DialogNodeType
@@ -736,7 +733,7 @@ export function DialogTreeEditor() {
 						Last saved: {lastSaveTime.toLocaleTimeString()}
 					</div>
 				</div>{" "}
-				{/* React Flow */}
+				{/* React Flow */}{" "}
 				<ReactFlow
 					nodes={nodes}
 					edges={edges}
