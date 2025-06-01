@@ -249,7 +249,8 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 			if (treeData.characters && Array.isArray(treeData.characters)) {
 				treeData.characters.forEach((char: any) => {
 					const existingChar = state.currentProject?.characters.find((c) => c.name === char.name);
-					if (!existingChar) {					const newChar = {
+					if (!existingChar) {
+						const newChar = {
 							...char,
 							id: uuidv4(),
 							createdAt: new Date(),
@@ -293,7 +294,7 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 			}
 
 			const projectMetadata = JSON.parse(await projectFile.async("text"));
-			
+
 			// Load characters
 			let characters: any[] = [];
 			const charactersFile = zipContent.file("characters.json");
@@ -310,8 +311,8 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 
 			// Load all dialog trees from the trees folder
 			const dialogTrees: DialogTree[] = [];
-			const treeFiles = Object.keys(zipContent.files).filter(fileName => 
-				fileName.startsWith("trees/") && fileName.endsWith(".json")
+			const treeFiles = Object.keys(zipContent.files).filter(
+				(fileName) => fileName.startsWith("trees/") && fileName.endsWith(".json")
 			);
 
 			for (const treeFileName of treeFiles) {
@@ -331,8 +332,9 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 						// Import any related characters that don't already exist
 						if (treeData.relatedCharacters && Array.isArray(treeData.relatedCharacters)) {
 							for (const char of treeData.relatedCharacters) {
-								const existingChar = characters.find(c => c.name === char.name);
-								if (!existingChar) {									characters.push({
+								const existingChar = characters.find((c) => c.name === char.name);
+								if (!existingChar) {
+									characters.push({
 										...char,
 										id: uuidv4(),
 										createdAt: new Date(),
@@ -343,7 +345,7 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 						}
 					}
 				}
-			}			// Create the complete project
+			} // Create the complete project
 			const fullProject: DialogProject = {
 				id: uuidv4(),
 				name: projectMetadata.name,
@@ -356,7 +358,9 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 			};
 
 			dispatch({ type: "LOAD_PROJECT", payload: fullProject });
-			setExportSuccess(`Project imported successfully! Loaded ${dialogTrees.length} dialog trees and ${characters.length} characters.`);
+			setExportSuccess(
+				`Project imported successfully! Loaded ${dialogTrees.length} dialog trees and ${characters.length} characters.`
+			);
 			setTimeout(() => setExportSuccess(null), 4000);
 			onClose();
 		} catch (error) {
@@ -377,7 +381,7 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 			// Process each file
 			for (let i = 0; i < files.length; i++) {
 				const file = files[i];
-				if (!file.name.endsWith('.json')) continue;
+				if (!file.name.endsWith(".json")) continue;
 
 				const content = await new Promise<string>((resolve, reject) => {
 					const reader = new FileReader();
@@ -388,7 +392,7 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 
 				try {
 					const data = JSON.parse(content);
-							// Check if this is a tree export format
+					// Check if this is a tree export format
 					if (data.tree && data.tree.id && data.tree.name) {
 						const tree: DialogTree = {
 							...data.tree,
@@ -401,7 +405,8 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 						// Collect characters from this tree
 						if (data.relatedCharacters && Array.isArray(data.relatedCharacters)) {
 							for (const char of data.relatedCharacters) {
-								const existingChar = allCharacters.find(c => c.name === char.name);								if (!existingChar) {
+								const existingChar = allCharacters.find((c) => c.name === char.name);
+								if (!existingChar) {
 									allCharacters.push({
 										...char,
 										id: uuidv4(),
@@ -419,7 +424,7 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 
 			if (dialogTrees.length === 0) {
 				throw new Error("No valid dialog tree files found");
-			}			// If no current project, create a new one
+			} // If no current project, create a new one
 			if (!state.currentProject) {
 				const newProject: DialogProject = {
 					id: uuidv4(),
@@ -435,7 +440,7 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 			} else {
 				// Add to existing project
 				for (const char of allCharacters) {
-					const existingChar = state.currentProject.characters.find(c => c.name === char.name);
+					const existingChar = state.currentProject.characters.find((c) => c.name === char.name);
 					if (!existingChar) {
 						dispatch({ type: "ADD_CHARACTER", payload: char });
 					}
@@ -452,7 +457,9 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 				}
 			}
 
-			setExportSuccess(`Successfully imported ${dialogTrees.length} dialog trees and ${allCharacters.length} characters!`);
+			setExportSuccess(
+				`Successfully imported ${dialogTrees.length} dialog trees and ${allCharacters.length} characters!`
+			);
 			setTimeout(() => setExportSuccess(null), 4000);
 			onClose();
 		} catch (error) {
@@ -467,7 +474,7 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 		if (!file) return;
 
 		// Check if it's a zip file
-		if (file.name.endsWith('.zip') || file.type === 'application/zip') {
+		if (file.name.endsWith(".zip") || file.type === "application/zip") {
 			importProjectFromZip(file);
 			return;
 		}
@@ -496,7 +503,6 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 					{/* Export Section */}
 					<div className="space-y-4">
 						<h3 className="text-lg font-semibold">Export</h3>
-
 						{/* Export format selector */}
 						<div className="space-y-2">
 							<Label>Export Format</Label>
@@ -526,7 +532,8 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 									XML
 								</Button>
 							</div>
-						</div>						<div className="grid grid-cols-1 gap-4">
+						</div>{" "}
+						<div className="grid grid-cols-1 gap-4">
 							<Button
 								onClick={exportProject}
 								disabled={!state.currentProject}
@@ -586,7 +593,9 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 							</div>
 						)}
 
-						<div className="space-y-4">							<div className="space-y-2">
+						<div className="space-y-4">
+							{" "}
+							<div className="space-y-2">
 								<Label htmlFor="file-upload">Upload File</Label>
 								<Input
 									id="file-upload"
@@ -599,7 +608,6 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 									Supports .json files (single project/tree) and .zip files (structured projects)
 								</p>
 							</div>
-
 							<div className="space-y-2">
 								<Label htmlFor="multiple-file-upload">Upload Multiple Tree Files</Label>
 								<Input
@@ -614,7 +622,6 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 									Upload multiple dialog tree JSON files at once
 								</p>
 							</div>
-
 							<div className="space-y-2">
 								<Label htmlFor="import-data">Or Paste JSON Data</Label>
 								<textarea
@@ -624,7 +631,8 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 									placeholder="Paste exported JSON data here..."
 									className="w-full h-32 p-3 text-sm border border-input bg-background rounded-md resize-none"
 								/>
-							</div>							<div className="grid grid-cols-1 gap-4">
+							</div>{" "}
+							<div className="grid grid-cols-1 gap-4">
 								<Button
 									onClick={importProject}
 									disabled={!importData.trim()}
