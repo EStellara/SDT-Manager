@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Download, Upload, FileText, Package } from "lucide-react";
+import { Download, Upload, FileText, Package, Archive } from "lucide-react";
 import { useState } from "react";
 import type { DialogProject, DialogTree } from "@/types/dialog";
+import JSZip from "jszip";
+import { v4 as uuidv4 } from "uuid";
 
 interface ExportImportPanelProps {
 	isOpen: boolean;
@@ -20,6 +22,71 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 	const [exportSuccess, setExportSuccess] = useState<string | null>(null);
 
 	if (!isOpen) return null;
+
+	const exportProjectAsZip = async () => {
+		if (!state.currentProject) return;
+
+		try {
+			const zip = new JSZip();
+			const projectName = state.currentProject.name.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+
+			// Create project metadata file
+			const projectMetadata = {
+				id: state.currentProject.id,
+				name: state.currentProject.name,
+				description: state.currentProject.description,
+				version: "1.0",
+				exportedAt: new Date().toISOString(),
+				treeCount: state.currentProject.dialogTrees.length,
+				characterCount: state.currentProject.characters.length,
+			};
+			zip.file("project.json", JSON.stringify(projectMetadata, null, 2));
+
+			// Create characters file
+			if (state.currentProject.characters.length > 0) {
+				zip.file("characters.json", JSON.stringify(state.currentProject.characters, null, 2));
+			}
+
+			// Create individual JSON files for each dialog tree
+			for (const tree of state.currentProject.dialogTrees) {
+				const treeData = {
+					tree,
+					relatedCharacters: state.currentProject.characters.filter((char) =>
+						tree.nodes.some((node) => node.data.character === char.id)
+					),
+					exportedAt: new Date().toISOString(),
+					exportVersion: "1.0",
+				};
+
+				const fileName = `trees/${tree.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.json`;
+				zip.file(fileName, JSON.stringify(treeData, null, 2));
+			}
+
+			// Create project variables file if any exist
+			if (Object.keys(state.currentProject.variables).length > 0) {
+				zip.file("variables.json", JSON.stringify(state.currentProject.variables, null, 2));
+			}
+
+			// Generate and download the zip file
+			const zipBlob = await zip.generateAsync({ type: "blob" });
+			const url = URL.createObjectURL(zipBlob);
+
+			const link = document.createElement("a");
+			link.href = url;
+			link.download = `${projectName}_project.zip`;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+
+			setExportSuccess(`Project exported as ${projectName}_project.zip with individual tree files`);
+			setTimeout(() => setExportSuccess(null), 3000);
+		} catch (error) {
+			console.error("Export failed:", error);
+			setImportError("Failed to export project as zip");
+			setTimeout(() => setImportError(null), 3000);
+		}
+	};
 
 	const exportProject = () => {
 		if (!state.currentProject) return;
@@ -173,7 +240,7 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 
 			const tree: DialogTree = {
 				...treeData.tree,
-				id: crypto.randomUUID(), // Generate new ID to avoid conflicts
+				id: uuidv4(), // Generate new ID to avoid conflicts
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			};
@@ -182,10 +249,9 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 			if (treeData.characters && Array.isArray(treeData.characters)) {
 				treeData.characters.forEach((char: any) => {
 					const existingChar = state.currentProject?.characters.find((c) => c.name === char.name);
-					if (!existingChar) {
-						const newChar = {
+					if (!existingChar) {					const newChar = {
 							...char,
-							id: crypto.randomUUID(),
+							id: uuidv4(),
 							createdAt: new Date(),
 							updatedAt: new Date(),
 						};
@@ -214,10 +280,199 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 		}
 	};
 
+	const importProjectFromZip = async (file: File) => {
+		try {
+			setImportError(null);
+			const zip = new JSZip();
+			const zipContent = await zip.loadAsync(file);
+
+			// Check if this is a valid project zip
+			const projectFile = zipContent.file("project.json");
+			if (!projectFile) {
+				throw new Error("Invalid project zip: missing project.json");
+			}
+
+			const projectMetadata = JSON.parse(await projectFile.async("text"));
+			
+			// Load characters
+			let characters: any[] = [];
+			const charactersFile = zipContent.file("characters.json");
+			if (charactersFile) {
+				characters = JSON.parse(await charactersFile.async("text"));
+			}
+
+			// Load variables
+			let variables: Record<string, any> = {};
+			const variablesFile = zipContent.file("variables.json");
+			if (variablesFile) {
+				variables = JSON.parse(await variablesFile.async("text"));
+			}
+
+			// Load all dialog trees from the trees folder
+			const dialogTrees: DialogTree[] = [];
+			const treeFiles = Object.keys(zipContent.files).filter(fileName => 
+				fileName.startsWith("trees/") && fileName.endsWith(".json")
+			);
+
+			for (const treeFileName of treeFiles) {
+				const treeFile = zipContent.file(treeFileName);
+				if (treeFile) {
+					const treeData = JSON.parse(await treeFile.async("text"));
+					if (treeData.tree) {
+						// Update tree with new IDs to avoid conflicts
+						const tree: DialogTree = {
+							...treeData.tree,
+							id: uuidv4(),
+							createdAt: new Date(),
+							updatedAt: new Date(),
+						};
+						dialogTrees.push(tree);
+
+						// Import any related characters that don't already exist
+						if (treeData.relatedCharacters && Array.isArray(treeData.relatedCharacters)) {
+							for (const char of treeData.relatedCharacters) {
+								const existingChar = characters.find(c => c.name === char.name);
+								if (!existingChar) {									characters.push({
+										...char,
+										id: uuidv4(),
+										createdAt: new Date(),
+										updatedAt: new Date(),
+									});
+								}
+							}
+						}
+					}
+				}
+			}			// Create the complete project
+			const fullProject: DialogProject = {
+				id: uuidv4(),
+				name: projectMetadata.name,
+				description: projectMetadata.description,
+				characters,
+				dialogTrees,
+				variables,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			};
+
+			dispatch({ type: "LOAD_PROJECT", payload: fullProject });
+			setExportSuccess(`Project imported successfully! Loaded ${dialogTrees.length} dialog trees and ${characters.length} characters.`);
+			setTimeout(() => setExportSuccess(null), 4000);
+			onClose();
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+			setImportError("Error importing project zip: " + errorMessage);
+			setTimeout(() => setImportError(null), 5000);
+		}
+	};
+	const handleMultipleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+		const files = event.target.files;
+		if (!files || files.length === 0) return;
+
+		try {
+			setImportError(null);
+			const dialogTrees: DialogTree[] = [];
+			const allCharacters: any[] = [];
+
+			// Process each file
+			for (let i = 0; i < files.length; i++) {
+				const file = files[i];
+				if (!file.name.endsWith('.json')) continue;
+
+				const content = await new Promise<string>((resolve, reject) => {
+					const reader = new FileReader();
+					reader.onload = (e) => resolve(e.target?.result as string);
+					reader.onerror = reject;
+					reader.readAsText(file);
+				});
+
+				try {
+					const data = JSON.parse(content);
+							// Check if this is a tree export format
+					if (data.tree && data.tree.id && data.tree.name) {
+						const tree: DialogTree = {
+							...data.tree,
+							id: uuidv4(),
+							createdAt: new Date(),
+							updatedAt: new Date(),
+						};
+						dialogTrees.push(tree);
+
+						// Collect characters from this tree
+						if (data.relatedCharacters && Array.isArray(data.relatedCharacters)) {
+							for (const char of data.relatedCharacters) {
+								const existingChar = allCharacters.find(c => c.name === char.name);								if (!existingChar) {
+									allCharacters.push({
+										...char,
+										id: uuidv4(),
+										createdAt: new Date(),
+										updatedAt: new Date(),
+									});
+								}
+							}
+						}
+					}
+				} catch (parseError) {
+					console.warn(`Failed to parse file ${file.name}:`, parseError);
+				}
+			}
+
+			if (dialogTrees.length === 0) {
+				throw new Error("No valid dialog tree files found");
+			}			// If no current project, create a new one
+			if (!state.currentProject) {
+				const newProject: DialogProject = {
+					id: uuidv4(),
+					name: "Imported Project",
+					description: `Project created from ${dialogTrees.length} imported trees`,
+					characters: allCharacters,
+					dialogTrees,
+					variables: {},
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				};
+				dispatch({ type: "LOAD_PROJECT", payload: newProject });
+			} else {
+				// Add to existing project
+				for (const char of allCharacters) {
+					const existingChar = state.currentProject.characters.find(c => c.name === char.name);
+					if (!existingChar) {
+						dispatch({ type: "ADD_CHARACTER", payload: char });
+					}
+				}
+
+				for (const tree of dialogTrees) {
+					dispatch({
+						type: "UPDATE_PROJECT",
+						payload: {
+							dialogTrees: [...state.currentProject.dialogTrees, tree],
+							updatedAt: new Date(),
+						},
+					});
+				}
+			}
+
+			setExportSuccess(`Successfully imported ${dialogTrees.length} dialog trees and ${allCharacters.length} characters!`);
+			setTimeout(() => setExportSuccess(null), 4000);
+			onClose();
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+			setImportError("Error importing files: " + errorMessage);
+			setTimeout(() => setImportError(null), 5000);
+		}
+	};
+
 	const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
 		if (!file) return;
 
+		// Check if it's a zip file
+		if (file.name.endsWith('.zip') || file.type === 'application/zip') {
+			importProjectFromZip(file);
+			return;
+		}
+
+		// Handle regular JSON files
 		const reader = new FileReader();
 		reader.onload = (e) => {
 			const content = e.target?.result as string;
@@ -271,9 +526,7 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 									XML
 								</Button>
 							</div>
-						</div>
-
-						<div className="grid grid-cols-2 gap-4">
+						</div>						<div className="grid grid-cols-1 gap-4">
 							<Button
 								onClick={exportProject}
 								disabled={!state.currentProject}
@@ -281,9 +534,24 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 							>
 								<Download className="w-6 h-6" />
 								<div className="text-center">
-									<div className="font-medium">Export Entire Project</div>
+									<div className="font-medium">Export Project (Single File)</div>
 									<div className="text-xs text-muted-foreground">
-										All trees, characters, and settings
+										All trees and characters in one file
+									</div>
+								</div>
+							</Button>
+
+							<Button
+								onClick={exportProjectAsZip}
+								disabled={!state.currentProject}
+								variant="outline"
+								className="h-auto p-4 flex flex-col items-center gap-2"
+							>
+								<Archive className="w-6 h-6" />
+								<div className="text-center">
+									<div className="font-medium">Export Project (Structured)</div>
+									<div className="text-xs text-muted-foreground">
+										Separate JSON files for each tree in a zip
 									</div>
 								</div>
 							</Button>
@@ -318,16 +586,33 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 							</div>
 						)}
 
-						<div className="space-y-4">
-							<div className="space-y-2">
+						<div className="space-y-4">							<div className="space-y-2">
 								<Label htmlFor="file-upload">Upload File</Label>
 								<Input
 									id="file-upload"
 									type="file"
-									accept=".json"
+									accept=".json,.zip"
 									onChange={handleFileUpload}
 									className="cursor-pointer"
 								/>
+								<p className="text-xs text-muted-foreground">
+									Supports .json files (single project/tree) and .zip files (structured projects)
+								</p>
+							</div>
+
+							<div className="space-y-2">
+								<Label htmlFor="multiple-file-upload">Upload Multiple Tree Files</Label>
+								<Input
+									id="multiple-file-upload"
+									type="file"
+									accept=".json"
+									multiple
+									onChange={handleMultipleFileUpload}
+									className="cursor-pointer"
+								/>
+								<p className="text-xs text-muted-foreground">
+									Upload multiple dialog tree JSON files at once
+								</p>
 							</div>
 
 							<div className="space-y-2">
@@ -339,9 +624,7 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 									placeholder="Paste exported JSON data here..."
 									className="w-full h-32 p-3 text-sm border border-input bg-background rounded-md resize-none"
 								/>
-							</div>
-
-							<div className="grid grid-cols-2 gap-4">
+							</div>							<div className="grid grid-cols-1 gap-4">
 								<Button
 									onClick={importProject}
 									disabled={!importData.trim()}

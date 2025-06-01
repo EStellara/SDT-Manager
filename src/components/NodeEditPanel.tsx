@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { X, Plus, Save, Trash2, MessageCircle, Users, GitBranch, Zap, Square } from "lucide-react";
 import { useDialogProject } from "@/contexts/DialogProjectContext";
 import type { DialogNode, DialogChoice } from "@/types/dialog";
+import { v4 as uuidv4 } from "uuid";
 
 interface NodeEditPanelProps {
 	node: DialogNode | null;
@@ -84,11 +85,10 @@ export function NodeEditPanel({ node, onClose, onSave }: NodeEditPanelProps) {
 			onSave(formData as DialogNode);
 		}
 	};
-
 	const addChoice = () => {
 		if (newChoice.trim() && formData.data) {
 			const newChoiceObj: DialogChoice = {
-				id: crypto.randomUUID(),
+				id: uuidv4(),
 				text: newChoice.trim(),
 			};
 
