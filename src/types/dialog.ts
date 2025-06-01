@@ -46,8 +46,20 @@ export interface DialogTree {
 export interface Character {
 	id: string;
 	name: string;
-	avatar?: string;
-	color?: string;
+	displayName?: string; // Optional display name (e.g., "Dr. Smith" vs "Marcus Smith")
+	description?: string;
+	avatar?: string; // URL or base64 image
+	color: string; // Hex color for UI identification
+	role?: string; // e.g., "Protagonist", "Antagonist", "NPC", "Merchant"
+	personality?: string[]; // e.g., ["Friendly", "Mysterious", "Aggressive"]
+	voiceProfile?: {
+		tone?: string; // e.g., "Deep", "High", "Raspy"
+		accent?: string; // e.g., "British", "Southern", "Robot"
+		speed?: 'slow' | 'normal' | 'fast';
+	};
+	metadata?: Record<string, any>; // For game-specific data
+	createdAt: Date;
+	updatedAt: Date;
 }
 
 export interface DialogProject {

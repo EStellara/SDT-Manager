@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useDialogProject } from "@/contexts/DialogProjectContext";
-import { FolderPlus, FilePlus, Folder, FileText, Users, Plus } from "lucide-react";
+import { CharacterModal } from "@/components/CharacterModal";
+import { FolderPlus, FilePlus, Folder, FileText, Users, Plus, Edit } from "lucide-react";
+import type { Character } from "@/types/dialog";
 
 export function ProjectSidebar() {
 	const { state, createProject, createTree, selectTree, dispatch } = useDialogProject();
@@ -11,6 +13,8 @@ export function ProjectSidebar() {
 	const [newTreeName, setNewTreeName] = useState("");
 	const [showNewProject, setShowNewProject] = useState(false);
 	const [showNewTree, setShowNewTree] = useState(false);
+	const [characterModalOpen, setCharacterModalOpen] = useState(false);
+	const [editingCharacter, setEditingCharacter] = useState<Character | undefined>(undefined);
 
 	const handleCreateProject = () => {
 		if (newProjectName.trim()) {
@@ -27,17 +31,34 @@ export function ProjectSidebar() {
 			setShowNewTree(false);
 		}
 	};
+	const handleCreateCharacter = () => {
+		setEditingCharacter(undefined);
+		setCharacterModalOpen(true);
+	};
 
-	const addCharacter = () => {
-		if (!state.currentProject) return;
+	const handleEditCharacter = (character: Character) => {
+		setEditingCharacter(character);
+		setCharacterModalOpen(true);
+	};
+	const handleSaveCharacter = (character: Character) => {
+		if (editingCharacter) {
+			dispatch({ 
+				type: "UPDATE_CHARACTER", 
+				payload: { 
+					characterId: character.id, 
+					updates: character 
+				}
+			});
+		} else {
+			dispatch({ type: "ADD_CHARACTER", payload: character });
+		}
+		setCharacterModalOpen(false);
+		setEditingCharacter(undefined);
+	};
 
-		const newCharacter = {
-			id: Math.random().toString(36).substr(2, 9),
-			name: "New Character",
-			color: "#3b82f6",
-		};
-
-		dispatch({ type: "ADD_CHARACTER", payload: newCharacter });
+	const handleCloseCharacterModal = () => {
+		setCharacterModalOpen(false);
+		setEditingCharacter(undefined);
 	};
 
 	return (
@@ -145,13 +166,11 @@ export function ProjectSidebar() {
 								</p>
 							)}
 						</div>
-					</div>
-
-					{/* Characters */}
+					</div>					{/* Characters */}
 					<div className="p-4 border-t border-border">
 						<div className="flex items-center justify-between mb-3">
 							<h3 className="text-sm font-medium">Characters</h3>
-							<Button size="sm" variant="ghost" onClick={addCharacter}>
+							<Button size="sm" variant="ghost" onClick={handleCreateCharacter}>
 								<Plus className="w-3 h-3" />
 							</Button>
 						</div>
@@ -160,14 +179,24 @@ export function ProjectSidebar() {
 							{state.currentProject.characters.map((character) => (
 								<div
 									key={character.id}
-									className="flex items-center gap-2 p-2 rounded hover:bg-secondary/50"
+									className="flex items-center gap-2 p-2 rounded hover:bg-secondary/50 group"
 								>
 									<div
-										className="w-3 h-3 rounded-full"
+										className="w-3 h-3 rounded-full flex-shrink-0"
 										style={{ backgroundColor: character.color }}
 									/>
-									<Users className="w-4 h-4 text-muted-foreground" />
-									<span className="flex-1 text-sm">{character.name}</span>
+									<Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+									<span className="flex-1 text-sm truncate" title={character.displayName || character.name}>
+										{character.displayName || character.name}
+									</span>
+									<Button
+										size="sm"
+										variant="ghost"
+										onClick={() => handleEditCharacter(character)}
+										className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+									>
+										<Edit className="w-3 h-3" />
+									</Button>
 								</div>
 							))}
 
@@ -177,9 +206,16 @@ export function ProjectSidebar() {
 								</p>
 							)}
 						</div>
-					</div>
-				</div>
+					</div>				</div>
 			)}
+
+			{/* Character Modal */}
+			<CharacterModal
+				character={editingCharacter}
+				isOpen={characterModalOpen}
+				onClose={handleCloseCharacterModal}
+				onSave={handleSaveCharacter}
+			/>
 		</div>
 	);
 }
