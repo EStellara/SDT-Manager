@@ -219,21 +219,24 @@ export function NodeEditPanel({ node, onClose, onSave }: NodeEditPanelProps) {
 					{(node.type === "npc" || node.type === "player_choice") && (
 						<div className="space-y-4">
 							<div className="space-y-2">
-								<Label htmlFor="character">Character</Label>
+								<Label htmlFor="character">Character</Label>{" "}
 								<Select
-									value={formData.data?.character || ""}
+									value={formData.data?.character || "__no_character__"}
 									onValueChange={(value) =>
 										setFormData((prev) => ({
 											...prev,
-											data: { ...prev.data!, character: value },
+											data: {
+												...prev.data!,
+												character: value === "__no_character__" ? undefined : value,
+											},
 										}))
 									}
 								>
 									<SelectTrigger>
 										<SelectValue placeholder="Select a character" />
-									</SelectTrigger>
+									</SelectTrigger>{" "}
 									<SelectContent>
-										<SelectItem value="">No character</SelectItem>
+										<SelectItem value="__no_character__">No character</SelectItem>
 										{characters.map((character) => (
 											<SelectItem key={character.id} value={character.id}>
 												<div className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import {
 	ReactFlow,
 	MiniMap,
@@ -38,7 +38,8 @@ export function DialogTreeEditor() {
 	const [copiedNode, setCopiedNode] = useState<DialogNodeType | null>(null);
 	const [undoStack, setUndoStack] = useState<any[]>([]);
 	const [redoStack, setRedoStack] = useState<any[]>([]);
-	const [hasRecoveryData, setHasRecoveryData] = useState(false); // Check for recovery data on component mount
+	const [hasRecoveryData, setHasRecoveryData] = useState(false);
+	const isUpdatingPosition = useRef(false); // Check for recovery data on component mount
 	useEffect(() => {
 		const backupData = localStorage.getItem("sdt_autosave_backup");
 		if (backupData && !state.currentProject) {
@@ -335,24 +336,25 @@ export function DialogTreeEditor() {
 		}));
 	}, [currentTree]);
 	const [nodes, setNodes] = useNodesState(flowNodes);
-	const [edges, setEdges] = useEdgesState(flowEdges);
-
-	// Update local state when currentTree changes
+	const [edges, setEdges] = useEdgesState(flowEdges); // Update local state when currentTree changes, but preserve drag state
 	React.useEffect(() => {
-		setNodes(flowNodes);
+		// Don't update nodes if we're currently processing position updates
+		if (!isUpdatingPosition.current) {
+			setNodes(flowNodes);
+		}
 		setEdges(flowEdges);
-		setHasUnsavedChanges(false);
-	}, [flowNodes, flowEdges, setNodes, setEdges]);
-
-	// Handle node changes (including position updates)
+	}, [flowNodes, flowEdges, setNodes, setEdges]); // Handle node changes (including position updates)
 	const handleNodesChange = useCallback(
 		(changes: NodeChange[]) => {
 			const updatedNodes = applyNodeChanges(changes, nodes);
 			setNodes(updatedNodes);
 
-			// Check for position changes and update the project
-			const positionChanges = changes.filter((change) => change.type === "position" && change.position);
-			if (positionChanges.length > 0 && currentTree) {
+			// Check for position changes and update the project only when dragging is finished
+			const positionChanges = changes.filter(
+				(change) => change.type === "position" && change.position && change.dragging === false
+			);
+			if (positionChanges.length > 0 && currentTree && !isUpdatingPosition.current) {
+				isUpdatingPosition.current = true;
 				positionChanges.forEach((change) => {
 					if (change.type === "position" && change.position) {
 						const nodeToUpdate = currentTree.nodes.find((n) => n.id === change.id);
@@ -361,6 +363,11 @@ export function DialogTreeEditor() {
 						}
 					}
 				});
+				setHasUnsavedChanges(true);
+				// Reset the flag after a brief delay to allow state updates to complete
+				setTimeout(() => {
+					isUpdatingPosition.current = false;
+				}, 100);
 			}
 
 			// Check for deletion changes
@@ -371,9 +378,8 @@ export function DialogTreeEditor() {
 						deleteNode(change.id);
 					}
 				});
+				setHasUnsavedChanges(true);
 			}
-
-			setHasUnsavedChanges(true);
 		},
 		[nodes, setNodes, currentTree, updateNode, deleteNode]
 	);
