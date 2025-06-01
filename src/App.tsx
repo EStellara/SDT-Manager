@@ -1,23 +1,15 @@
-import { DialogProjectProvider } from "@/contexts/DialogProjectContext";
-import { ProjectSidebar } from "@/components/ProjectSidebar";
-import { DialogTreeEditor } from "@/components/DialogTreeEditor";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { HomePage, DialogProjectPage, NotFoundPage } from "@/pages";
 
 function App() {
 	return (
-		<DialogProjectProvider>
-			<div className="min-h-screen bg-background flex relative">
-				<ThemeToggle />
-
-				{/* Sidebar */}
-				<ProjectSidebar />
-
-				{/* Main Content */}
-				<div className="flex-1 h-screen">
-					<DialogTreeEditor />
-				</div>
-			</div>
-		</DialogProjectProvider>
+		<Router>
+			<Routes>
+				<Route path="/" element={<HomePage />} />
+				<Route path="/project" element={<DialogProjectPage />} />
+				<Route path="*" element={<NotFoundPage />} />
+			</Routes>
+		</Router>
 	);
 }
 

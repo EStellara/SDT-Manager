@@ -1,14 +1,16 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useDialogProject } from "@/contexts/DialogProjectContext";
 import { CharacterModal } from "@/components/CharacterModal";
 import { ExportImportPanel } from "@/components/ExportImportPanel";
-import { FolderPlus, FilePlus, Folder, FileText, Users, Plus, Edit, Package } from "lucide-react";
+import { FolderPlus, FilePlus, Folder, FileText, Users, Plus, Edit, Package, Home } from "lucide-react";
 import type { Character } from "@/types/dialog";
 
 export function ProjectSidebar() {
+	const navigate = useNavigate();
 	const { state, createProject, createTree, selectTree, dispatch } = useDialogProject();
 	const [newProjectName, setNewProjectName] = useState("");
 	const [newTreeName, setNewTreeName] = useState("");
@@ -67,7 +69,12 @@ export function ProjectSidebar() {
 		<div className="w-80 h-full bg-background border-r border-border flex flex-col">
 			{/* Header */}
 			<div className="p-4 border-b border-border">
-				<h2 className="text-lg font-semibold mb-3">Stellar Dialog Tree Manager</h2>
+				<div className="flex items-center justify-between mb-3">
+					<h2 className="text-lg font-semibold">Stellar Dialog Tree Manager</h2>
+					<Button variant="ghost" size="sm" onClick={() => navigate("/")} title="Go to Home">
+						<Home className="h-4 w-4" />
+					</Button>
+				</div>
 
 				{/* New Project */}
 				{!state.currentProject ? (
