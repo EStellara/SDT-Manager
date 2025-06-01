@@ -471,16 +471,17 @@ export function DialogTreeEditor() {
 			let x = 100;
 			let y = 100;
 
-			// Simple positioning logic to avoid overlaps
+			// Improved positioning logic to accommodate variable node sizes
 			if (existingPositions.length > 0) {
 				const lastNode = existingPositions[existingPositions.length - 1];
-				x = lastNode.x + 250;
+				x = lastNode.x + 350; // Increased spacing from 250 to 350
 				y = lastNode.y;
 
 				// Wrap to next row if too far right
-				if (x > 800) {
+				if (x > 900) {
+					// Increased threshold from 800 to 900
 					x = 100;
-					y = lastNode.y + 200;
+					y = lastNode.y + 250; // Increased vertical spacing from 200 to 250
 				}
 			}
 
