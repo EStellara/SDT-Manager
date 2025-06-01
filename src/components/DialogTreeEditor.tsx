@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
 	ReactFlow,
 	MiniMap,
@@ -14,8 +14,10 @@ import "@xyflow/react/dist/style.css";
 
 import { useDialogProject } from "@/contexts/DialogProjectContext";
 import { DialogNodeComponent } from "./DialogNodeComponent";
+import { NodeEditPanel } from "./NodeEditPanel";
+import { DialogPreviewPanel } from "./DialogPreviewPanel";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Play } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import type { DialogNode as DialogNodeType } from "@/types/dialog";
 
@@ -24,8 +26,10 @@ const nodeTypes = {
 };
 
 export function DialogTreeEditor() {
-	const { state, getCurrentTree, addNode } = useDialogProject();
+	const { state, getCurrentTree, addNode, updateNode } = useDialogProject();
 	const currentTree = getCurrentTree();
+	const [selectedNode, setSelectedNode] = useState<DialogNodeType | null>(null);
+	const [showPreview, setShowPreview] = useState(false);
 
 	// Convert our dialog nodes to ReactFlow nodes
 	const flowNodes: Node[] = useMemo(() => {
@@ -65,6 +69,24 @@ export function DialogTreeEditor() {
 	}, [flowNodes, flowEdges, setNodes, setEdges]);
 
 	const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+	const onNodeClick = useCallback(
+		(_event: React.MouseEvent, node: Node) => {
+			// Find the corresponding DialogNodeType
+			const dialogNode = currentTree?.nodes.find((n) => n.id === node.id);
+			if (dialogNode) {
+				setSelectedNode(dialogNode);
+			}
+		},
+		[currentTree]
+	);
+
+	const handleSaveNode = useCallback(
+		(updatedNode: DialogNodeType) => {
+			updateNode(updatedNode.id, updatedNode);
+			setSelectedNode(null);
+		},
+		[updateNode]
+	);
 
 	const addNewNode = useCallback(
 		(nodeType: DialogNodeType["type"]) => {
@@ -108,91 +130,109 @@ export function DialogTreeEditor() {
 			</div>
 		);
 	}
-
 	return (
-		<div className="w-full h-full relative">
-			{/* Toolbar */}
-			<div className="absolute top-4 left-4 z-10 flex gap-2">
-				<Button
-					onClick={() => addNewNode("npc")}
-					size="sm"
-					variant="outline"
-					className="bg-background/90 backdrop-blur-sm"
+		<div className="w-full h-full flex relative">
+			<div className="flex-1 relative">
+				{" "}
+				{/* Toolbar */}
+				<div className="absolute top-4 left-4 z-10 flex gap-2">
+					<Button
+						onClick={() => addNewNode("npc")}
+						size="sm"
+						variant="outline"
+						className="bg-background/90 backdrop-blur-sm"
+					>
+						<Plus className="w-4 h-4 mr-1" />
+						NPC Dialog
+					</Button>
+					<Button
+						onClick={() => addNewNode("player_choice")}
+						size="sm"
+						variant="outline"
+						className="bg-background/90 backdrop-blur-sm"
+					>
+						<Plus className="w-4 h-4 mr-1" />
+						Player Choice
+					</Button>
+					<Button
+						onClick={() => addNewNode("conditional")}
+						size="sm"
+						variant="outline"
+						className="bg-background/90 backdrop-blur-sm"
+					>
+						<Plus className="w-4 h-4 mr-1" />
+						Conditional
+					</Button>
+					<Button
+						onClick={() => addNewNode("action")}
+						size="sm"
+						variant="outline"
+						className="bg-background/90 backdrop-blur-sm"
+					>
+						<Plus className="w-4 h-4 mr-1" />
+						Action
+					</Button>
+					<Button
+						onClick={() => addNewNode("end")}
+						size="sm"
+						variant="outline"
+						className="bg-background/90 backdrop-blur-sm"
+					>
+						<Plus className="w-4 h-4 mr-1" />
+						End
+					</Button>
+					<div className="border-l border-border mx-2 h-8" />
+					<Button
+						onClick={() => setShowPreview(!showPreview)}
+						size="sm"
+						variant={showPreview ? "default" : "outline"}
+						className="bg-background/90 backdrop-blur-sm"
+					>
+						<Play className="w-4 h-4 mr-1" />
+						Preview
+					</Button>
+				</div>
+				{/* React Flow */}
+				<ReactFlow
+					nodes={nodes}
+					edges={edges}
+					onNodesChange={onNodesChange}
+					onEdgesChange={onEdgesChange}
+					onConnect={onConnect}
+					onNodeClick={onNodeClick}
+					nodeTypes={nodeTypes}
+					fitView
+					className="bg-background h-full w-full"
 				>
-					<Plus className="w-4 h-4 mr-1" />
-					NPC Dialog
-				</Button>
-				<Button
-					onClick={() => addNewNode("player_choice")}
-					size="sm"
-					variant="outline"
-					className="bg-background/90 backdrop-blur-sm"
-				>
-					<Plus className="w-4 h-4 mr-1" />
-					Player Choice
-				</Button>
-				<Button
-					onClick={() => addNewNode("conditional")}
-					size="sm"
-					variant="outline"
-					className="bg-background/90 backdrop-blur-sm"
-				>
-					<Plus className="w-4 h-4 mr-1" />
-					Conditional
-				</Button>
-				<Button
-					onClick={() => addNewNode("action")}
-					size="sm"
-					variant="outline"
-					className="bg-background/90 backdrop-blur-sm"
-				>
-					<Plus className="w-4 h-4 mr-1" />
-					Action
-				</Button>
-				<Button
-					onClick={() => addNewNode("end")}
-					size="sm"
-					variant="outline"
-					className="bg-background/90 backdrop-blur-sm"
-				>
-					<Plus className="w-4 h-4 mr-1" />
-					End
-				</Button>
-			</div>
-
-			{/* React Flow */}
-			<ReactFlow
-				nodes={nodes}
-				edges={edges}
-				onNodesChange={onNodesChange}
-				onEdgesChange={onEdgesChange}
-				onConnect={onConnect}
-				nodeTypes={nodeTypes}
-				fitView
-				className="bg-background"
-			>
-				<Controls className="bg-background border border-border" />
-				<MiniMap
-					className="bg-background border border-border"
-					nodeColor={(node) => {
-						switch (node.data?.nodeType) {
-							case "npc":
-								return "#3b82f6";
-							case "player_choice":
-								return "#10b981";
-							case "conditional":
-								return "#f59e0b";
-							case "action":
-								return "#ef4444";
-							case "end":
-								return "#6b7280";
-							default:
-								return "#8b5cf6";
-						}
-					}}
-				/>
-				<Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-30" />
-			</ReactFlow>
+					<Controls className="bg-background border border-border" />
+					<MiniMap
+						className="bg-background border border-border"
+						nodeColor={(node) => {
+							switch (node.data?.nodeType) {
+								case "npc":
+									return "#3b82f6";
+								case "player_choice":
+									return "#10b981";
+								case "conditional":
+									return "#f59e0b";
+								case "action":
+									return "#ef4444";
+								case "end":
+									return "#6b7280";
+								default:
+									return "#8b5cf6";
+							}
+						}}
+					/>{" "}
+					<Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-30" />
+				</ReactFlow>
+			</div>{" "}
+			{/* Node Edit Panel */}
+			{selectedNode && (
+				<NodeEditPanel node={selectedNode} onClose={() => setSelectedNode(null)} onSave={handleSaveNode} />
+			)}{" "}
+			{/* Dialog Preview Panel */}
+			{showPreview && <DialogPreviewPanel isOpen={showPreview} onClose={() => setShowPreview(false)} />}
 		</div>
 	);
 }
