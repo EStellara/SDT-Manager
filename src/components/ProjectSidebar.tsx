@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useDialogProject } from "@/contexts/DialogProjectContext";
 import { CharacterModal } from "@/components/CharacterModal";
-import { FolderPlus, FilePlus, Folder, FileText, Users, Plus, Edit } from "lucide-react";
+import { ExportImportPanel } from "@/components/ExportImportPanel";
+import { FolderPlus, FilePlus, Folder, FileText, Users, Plus, Edit, Package } from "lucide-react";
 import type { Character } from "@/types/dialog";
 
 export function ProjectSidebar() {
@@ -15,6 +16,7 @@ export function ProjectSidebar() {
 	const [showNewTree, setShowNewTree] = useState(false);
 	const [characterModalOpen, setCharacterModalOpen] = useState(false);
 	const [editingCharacter, setEditingCharacter] = useState<Character | undefined>(undefined);
+	const [exportImportOpen, setExportImportOpen] = useState(false);
 
 	const handleCreateProject = () => {
 		if (newProjectName.trim()) {
@@ -42,12 +44,12 @@ export function ProjectSidebar() {
 	};
 	const handleSaveCharacter = (character: Character) => {
 		if (editingCharacter) {
-			dispatch({ 
-				type: "UPDATE_CHARACTER", 
-				payload: { 
-					characterId: character.id, 
-					updates: character 
-				}
+			dispatch({
+				type: "UPDATE_CHARACTER",
+				payload: {
+					characterId: character.id,
+					updates: character,
+				},
 			});
 		} else {
 			dispatch({ type: "ADD_CHARACTER", payload: character });
@@ -101,9 +103,19 @@ export function ProjectSidebar() {
 					</div>
 				) : (
 					<div className="space-y-2">
-						<div className="flex items-center gap-2">
-							<Folder className="w-4 h-4" />
-							<span className="font-medium">{state.currentProject.name}</span>
+						<div className="flex items-center justify-between">
+							<div className="flex items-center gap-2">
+								<Folder className="w-4 h-4" />
+								<span className="font-medium">{state.currentProject.name}</span>
+							</div>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => setExportImportOpen(true)}
+								title="Export/Import"
+							>
+								<Package className="w-4 h-4" />
+							</Button>
 						</div>
 						{state.currentProject.description && (
 							<p className="text-sm text-muted-foreground">{state.currentProject.description}</p>
@@ -111,7 +123,6 @@ export function ProjectSidebar() {
 					</div>
 				)}
 			</div>
-
 			{/* Content */}
 			{state.currentProject && (
 				<div className="flex-1 overflow-y-auto">
@@ -166,7 +177,8 @@ export function ProjectSidebar() {
 								</p>
 							)}
 						</div>
-					</div>					{/* Characters */}
+					</div>{" "}
+					{/* Characters */}
 					<div className="p-4 border-t border-border">
 						<div className="flex items-center justify-between mb-3">
 							<h3 className="text-sm font-medium">Characters</h3>
@@ -186,7 +198,10 @@ export function ProjectSidebar() {
 										style={{ backgroundColor: character.color }}
 									/>
 									<Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-									<span className="flex-1 text-sm truncate" title={character.displayName || character.name}>
+									<span
+										className="flex-1 text-sm truncate"
+										title={character.displayName || character.name}
+									>
 										{character.displayName || character.name}
 									</span>
 									<Button
@@ -206,9 +221,9 @@ export function ProjectSidebar() {
 								</p>
 							)}
 						</div>
-					</div>				</div>
-			)}
-
+					</div>{" "}
+				</div>
+			)}{" "}
 			{/* Character Modal */}
 			<CharacterModal
 				character={editingCharacter}
@@ -216,6 +231,8 @@ export function ProjectSidebar() {
 				onClose={handleCloseCharacterModal}
 				onSave={handleSaveCharacter}
 			/>
+			{/* Export/Import Panel */}
+			<ExportImportPanel isOpen={exportImportOpen} onClose={() => setExportImportOpen(false)} />
 		</div>
 	);
 }
