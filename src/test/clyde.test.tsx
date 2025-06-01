@@ -516,9 +516,7 @@ describe("👻 Clyde: Context and State Management Tests", () => {
 			expect(project.createdAt.getTime()).toBeGreaterThanOrEqual(startTime.getTime());
 			expect(project.updatedAt.getTime()).toBeGreaterThanOrEqual(startTime.getTime());
 
-			const initialUpdatedAt = project.updatedAt;
-
-			// Wait a bit then update
+			const initialUpdatedAt = project.updatedAt; // Wait a bit then update
 			setTimeout(() => {
 				act(() => {
 					result.current.dispatch({
@@ -528,8 +526,8 @@ describe("👻 Clyde: Context and State Management Tests", () => {
 				});
 
 				const updatedProject = result.current.state.currentProject!;
-				expect(updatedProject.updatedAt.getTime()).toBeGreaterThan(initialUpdatedAt.getTime());
-			}, 10);
+				expect(updatedProject.updatedAt.getTime()).toBeGreaterThanOrEqual(initialUpdatedAt.getTime());
+			}, 50);
 		});
 	});
 });

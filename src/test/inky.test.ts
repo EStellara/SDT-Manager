@@ -12,14 +12,13 @@ describe('👻 Inky: Core Data Structure Tests', () => {
 				type: 'npc',
 				position: { x: 100, y: 100 },
 				data: {
-					text: "Waka waka! Welcome to the maze!",
-					characterId: 'pac-man',
-					conditions: []
+					title: "Waka waka! Welcome to the maze!",
+					character: 'pac-man'
 				}
 			}
 
 			expect(node.type).toBe('npc')
-			expect(node.data.text).toContain('Waka')
+			expect(node.data.title).toContain('Waka')
 			expect(node.position.x).toBe(100)
 			expect(node.position.y).toBe(100)
 		})
@@ -27,10 +26,10 @@ describe('👻 Inky: Core Data Structure Tests', () => {
 		it('should create a valid player choice node', () => {
 			const node: DialogNode = {
 				id: 'inky-test-2',
-				type: 'choice',
+				type: 'player_choice',
 				position: { x: 200, y: 200 },
 				data: {
-					text: "Which direction will you go?",
+					title: "Which direction will you go?",
 					choices: [
 						{ id: 'choice-1', text: 'Go left into the blue territory', targetNodeId: 'left-node' },
 						{ id: 'choice-2', text: 'Go right toward the power pellet', targetNodeId: 'right-node' }
@@ -38,7 +37,7 @@ describe('👻 Inky: Core Data Structure Tests', () => {
 				}
 			}
 
-			expect(node.type).toBe('choice')
+			expect(node.type).toBe('player_choice')
 			expect(node.data.choices).toHaveLength(2)
 			expect(node.data.choices?.[0].text).toContain('blue territory')
 			expect(node.data.choices?.[1].targetNodeId).toBe('right-node')
@@ -198,5 +197,437 @@ describe('👻 Inky: Core Data Structure Tests', () => {
 			expect(character.displayName).toBeUndefined()
 			expect(character.description).toBeUndefined()
 		})
+	})
+
+	describe('Sample Project Creation', () => {
+		it('should create a complete Pac-Man themed sample project', () => {
+			const sampleProject: DialogProject = {
+				id: 'pac-man-sample-project',
+				name: 'Pac-Man Dialog Adventure',
+				description: 'A sample project showcasing all dialog features with our favorite yellow hero and colorful ghosts',
+				characters: [
+					{
+						id: 'pac-man-hero',
+						name: 'Pac-Man',
+						displayName: 'The Yellow Hero',
+						description: 'The legendary dot-eating champion of the maze',
+						color: '#ffff00',
+						role: 'Protagonist',
+						personality: ['Brave', 'Determined', 'Hungry'],
+						voiceProfile: {
+							tone: 'Cheerful',
+							accent: 'Heroic',
+							speed: 'normal'
+						},
+						metadata: { powerLevel: 'medium', specialAbility: 'powerPellet' },
+						createdAt: new Date('2025-05-31'),
+						updatedAt: new Date('2025-05-31')
+					},
+					{
+						id: 'blinky-ghost',
+						name: 'Blinky',
+						displayName: 'The Red Leader',
+						description: 'Aggressive red ghost who leads the hunt',
+						color: '#ff0000',
+						role: 'Primary Antagonist',
+						personality: ['Aggressive', 'Leadership', 'Direct'],
+						voiceProfile: {
+							tone: 'Commanding',
+							accent: 'Authoritative',
+							speed: 'fast'
+						},
+						metadata: { difficulty: 'high', pattern: 'chase' },
+						createdAt: new Date('2025-05-31'),
+						updatedAt: new Date('2025-05-31')
+					},
+					{
+						id: 'pinky-ghost',
+						name: 'Pinky',
+						displayName: 'The Pink Ambusher',
+						description: 'Strategic pink ghost who plans ambushes',
+						color: '#ffb8ff',
+						role: 'Secondary Antagonist',
+						personality: ['Strategic', 'Ambush-oriented', 'Clever'],
+						voiceProfile: {
+							tone: 'Sly',
+							accent: 'Mysterious',
+							speed: 'normal'
+						},
+						metadata: { difficulty: 'medium-high', pattern: 'ambush' },
+						createdAt: new Date('2025-05-31'),
+						updatedAt: new Date('2025-05-31')
+					}
+				],
+				dialogTrees: [], // Will be populated separately
+				variables: {
+					gameLevel: 1,
+					score: 0,
+					powerPelletActive: false,
+					ghostsEaten: 0,
+					livesRemaining: 3,
+					currentMaze: 'classic'
+				},
+				createdAt: new Date('2025-05-31'),
+				updatedAt: new Date('2025-05-31')
+			};
+
+			// Validate project structure
+			expect(sampleProject.id).toBeTruthy();
+			expect(sampleProject.name).toContain('Pac-Man');
+			expect(sampleProject.characters).toHaveLength(3);
+			expect(sampleProject.variables.gameLevel).toBe(1);
+			expect(sampleProject.variables.score).toBe(0);
+
+			// Validate character diversity
+			const characterColors = sampleProject.characters.map(c => c.color);
+			expect(characterColors).toContain('#ffff00'); // Pac-Man yellow
+			expect(characterColors).toContain('#ff0000'); // Blinky red
+			expect(characterColors).toContain('#ffb8ff'); // Pinky pink
+
+			// Validate character roles
+			const roles = sampleProject.characters.map(c => c.role);
+			expect(roles).toContain('Protagonist');
+			expect(roles).toContain('Primary Antagonist');
+			expect(roles).toContain('Secondary Antagonist');
+
+			// Validate game variables are properly initialized
+			expect(sampleProject.variables.powerPelletActive).toBe(false);
+			expect(sampleProject.variables.livesRemaining).toBe(3);
+			expect(sampleProject.variables.currentMaze).toBe('classic');
+		});
+
+		it('should create sample dialog trees with proper node structures', () => {
+			const encounterTree: DialogTree = {
+				id: 'ghost-encounter-tree',
+				name: 'Ghost Encounter Dialog',
+				description: 'A dynamic encounter with ghosts in the maze',
+				nodes: [
+					{
+						id: 'start-encounter',
+						type: 'npc',
+						position: { x: 100, y: 50 },
+						data: {
+							title: 'Ghost Appears',
+							content: '*A colorful ghost blocks your path through the maze!*',
+							character: 'blinky-ghost'
+						}
+					}, {
+						id: 'player-choice',
+						type: 'player_choice',
+						position: { x: 100, y: 200 },
+						data: {
+							title: 'Choose Your Response',
+							content: 'How do you react to the ghost?',
+							choices: [
+								{ id: 'choice-flee', text: 'Run away quickly!' },
+								{ id: 'choice-power', text: 'Search for a power pellet' },
+								{ id: 'choice-negotiate', text: 'Try to negotiate' }
+							]
+						}
+					},
+					{
+						id: 'flee-result',
+						type: 'npc',
+						position: { x: 50, y: 350 },
+						data: {
+							title: 'Escape Route',
+							content: 'Waka waka! You dash through the maze corridors, successfully avoiding the ghost.',
+							character: 'pac-man-hero'
+						}
+					},
+					{
+						id: 'power-result',
+						type: 'conditional',
+						position: { x: 100, y: 350 },
+						data: {
+							title: 'Power Pellet Check',
+							content: 'Do you have a power pellet nearby?',
+							condition: 'powerPelletActive === true'
+						}
+					},
+					{
+						id: 'negotiate-result',
+						type: 'npc',
+						position: { x: 150, y: 350 },
+						data: {
+							title: 'Ghost Response',
+							content: 'The ghost pauses, surprised by your diplomatic approach...',
+							character: 'blinky-ghost'
+						}
+					},
+					{
+						id: 'victory-end',
+						type: 'end',
+						position: { x: 100, y: 500 },
+						data: {
+							title: 'Victory!',
+							content: 'You successfully handled the ghost encounter!'
+						}
+					}
+				],
+				connections: [
+					{ id: 'conn1', source: 'start-encounter', target: 'player-choice' },
+					{ id: 'conn2', source: 'player-choice', target: 'flee-result', sourceHandle: 'choice-flee' },
+					{ id: 'conn3', source: 'player-choice', target: 'power-result', sourceHandle: 'choice-power' },
+					{ id: 'conn4', source: 'player-choice', target: 'negotiate-result', sourceHandle: 'choice-negotiate' },
+					{ id: 'conn5', source: 'flee-result', target: 'victory-end' },
+					{ id: 'conn6', source: 'power-result', target: 'victory-end' },
+					{ id: 'conn7', source: 'negotiate-result', target: 'victory-end' }
+				],
+				startNodeId: 'start-encounter',
+				createdAt: new Date('2025-05-31'),
+				updatedAt: new Date('2025-05-31')
+			};
+
+			// Validate tree structure
+			expect(encounterTree.nodes).toHaveLength(6);
+			expect(encounterTree.connections).toHaveLength(7);
+			expect(encounterTree.startNodeId).toBe('start-encounter');			// Validate node types distribution
+			const nodeTypes = encounterTree.nodes.map(n => n.type);
+			expect(nodeTypes).toContain('npc');
+			expect(nodeTypes).toContain('player_choice');
+			expect(nodeTypes).toContain('conditional');
+			expect(nodeTypes).toContain('end');// Validate player choice node has proper choices
+			const choiceNode = encounterTree.nodes.find(n => n.type === 'player_choice');
+			expect(choiceNode?.data.choices).toHaveLength(3);
+			expect(choiceNode?.data.choices?.[0].text).toContain('Run away');
+			expect(choiceNode?.data.choices?.[1].text).toContain('power pellet');
+			expect(choiceNode?.data.choices?.[2].text).toContain('negotiate');
+
+			// Validate character assignments
+			const npcNodes = encounterTree.nodes.filter(n => n.type === 'npc');
+			const charactersUsed = npcNodes.map(n => n.data.character).filter(Boolean);
+			expect(charactersUsed).toContain('blinky-ghost');
+			expect(charactersUsed).toContain('pac-man-hero');
+		});
+
+		it('should create a tutorial dialog tree for new players', () => {
+			const tutorialTree: DialogTree = {
+				id: 'tutorial-welcome-tree',
+				name: 'Game Tutorial Introduction',
+				description: 'Welcome new players to the game mechanics',
+				nodes: [
+					{
+						id: 'welcome-start',
+						type: 'npc',
+						position: { x: 100, y: 50 },
+						data: {
+							title: 'Welcome to the Maze!',
+							content: 'Waka waka! Welcome to the maze, new player! I\'m Pac-Man, and I\'ll show you the ropes.',
+							character: 'pac-man-hero'
+						}
+					}, {
+						id: 'tutorial-choice',
+						type: 'player_choice',
+						position: { x: 100, y: 200 },
+						data: {
+							title: 'Tutorial Options',
+							content: 'What would you like to learn about first?',
+							choices: [
+								{ id: 'learn-movement', text: 'How do I move around?' },
+								{ id: 'learn-dots', text: 'What are those dots for?' },
+								{ id: 'learn-ghosts', text: 'Tell me about the ghosts!' },
+								{ id: 'skip-tutorial', text: 'I\'m ready to play!' }
+							]
+						}
+					},
+					{
+						id: 'movement-explain',
+						type: 'npc',
+						position: { x: 50, y: 350 },
+						data: {
+							title: 'Movement Tutorial',
+							content: 'Use the arrow keys to navigate through the maze. You can only move when there\'s a clear path!',
+							character: 'pac-man-hero'
+						}
+					},
+					{
+						id: 'dots-explain',
+						type: 'npc',
+						position: { x: 100, y: 350 },
+						data: {
+							title: 'Dots and Scoring',
+							content: 'Collect the small dots for points! The big power pellets let you chase and eat ghosts temporarily.',
+							character: 'pac-man-hero'
+						}
+					},
+					{
+						id: 'ghosts-intro',
+						type: 'npc',
+						position: { x: 150, y: 350 },
+						data: {
+							title: 'Meet the Ghosts',
+							content: 'Each ghost has a unique personality. I\'m aggressive and direct - I\'ll chase you relentlessly!',
+							character: 'blinky-ghost'
+						}
+					},
+					{
+						id: 'tutorial-complete',
+						type: 'end',
+						position: { x: 100, y: 500 },
+						data: {
+							title: 'Tutorial Complete',
+							content: 'Great! You\'re ready to start your maze adventure. Good luck!'
+						}
+					}
+				],
+				connections: [
+					{ id: 'tut-conn1', source: 'welcome-start', target: 'tutorial-choice' },
+					{ id: 'tut-conn2', source: 'tutorial-choice', target: 'movement-explain', sourceHandle: 'learn-movement' },
+					{ id: 'tut-conn3', source: 'tutorial-choice', target: 'dots-explain', sourceHandle: 'learn-dots' },
+					{ id: 'tut-conn4', source: 'tutorial-choice', target: 'ghosts-intro', sourceHandle: 'learn-ghosts' },
+					{ id: 'tut-conn5', source: 'tutorial-choice', target: 'tutorial-complete', sourceHandle: 'skip-tutorial' },
+					{ id: 'tut-conn6', source: 'movement-explain', target: 'tutorial-complete' },
+					{ id: 'tut-conn7', source: 'dots-explain', target: 'tutorial-complete' },
+					{ id: 'tut-conn8', source: 'ghosts-intro', target: 'tutorial-complete' }
+				],
+				startNodeId: 'welcome-start',
+				createdAt: new Date('2025-05-31'),
+				updatedAt: new Date('2025-05-31')
+			};
+
+			// Validate tutorial structure
+			expect(tutorialTree.nodes).toHaveLength(6);
+			expect(tutorialTree.startNodeId).toBe('welcome-start');			// Validate tutorial has comprehensive choice options
+			const choiceNode = tutorialTree.nodes.find(n => n.type === 'player_choice');
+			expect(choiceNode?.data.choices).toHaveLength(4);
+
+			// Validate all tutorial paths lead to completion (4 connections to tutorial-complete)
+			const endConnections = tutorialTree.connections.filter(c => c.target === 'tutorial-complete');
+			expect(endConnections).toHaveLength(4); // 3 tutorial explanation paths + 1 skip option
+
+			// Validate educational content variety
+			const explanationNodes = tutorialTree.nodes.filter(n =>
+				n.id.includes('explain') || n.id.includes('intro')
+			);
+			expect(explanationNodes).toHaveLength(3); // movement, dots, ghosts
+		});
+
+		it('should create complex branching dialog with multiple characters', () => {
+			const complexTree: DialogTree = {
+				id: 'ghost-alliance-tree',
+				name: 'Ghost Alliance Negotiation',
+				description: 'A complex dialog where Pac-Man attempts to negotiate with multiple ghosts',
+				nodes: [
+					{
+						id: 'scene-setup',
+						type: 'npc',
+						position: { x: 100, y: 50 },
+						data: {
+							title: 'The Meeting',
+							content: 'You find yourself surrounded by Blinky and Pinky in the center of the maze...',
+							character: 'pac-man-hero'
+						}
+					},
+					{
+						id: 'blinky-aggressive',
+						type: 'npc',
+						position: { x: 50, y: 150 },
+						data: {
+							title: 'Blinky\'s Challenge',
+							content: 'Well, well! Look who wandered into our territory. You\'ve got some nerve, yellow dot-muncher!',
+							character: 'blinky-ghost'
+						}
+					},
+					{
+						id: 'pinky-strategic',
+						type: 'npc',
+						position: { x: 150, y: 150 },
+						data: {
+							title: 'Pinky\'s Assessment',
+							content: 'Hold on, Blinky. Maybe we should hear what our little friend has to say first...',
+							character: 'pinky-ghost'
+						}
+					}, {
+						id: 'negotiation-choice',
+						type: 'player_choice',
+						position: { x: 100, y: 250 },
+						data: {
+							title: 'Diplomatic Approach',
+							content: 'How do you approach this delicate negotiation?',
+							choices: [
+								{ id: 'appeal-blinky', text: 'Appeal to Blinky\'s leadership' },
+								{ id: 'work-with-pinky', text: 'Work with Pinky\'s strategic mind' },
+								{ id: 'propose-truce', text: 'Propose a temporary truce' },
+								{ id: 'challenge-honor', text: 'Challenge them to honorable combat' }
+							]
+						}
+					},
+					{
+						id: 'leadership-path',
+						type: 'conditional',
+						position: { x: 50, y: 350 },
+						data: {
+							title: 'Leadership Recognition',
+							content: 'Check if Blinky respects your diplomatic approach',
+							condition: 'playerDiplomacy > 3 && blinkyRespect > 0'
+						}
+					},
+					{
+						id: 'strategic-alliance',
+						type: 'npc',
+						position: { x: 150, y: 350 },
+						data: {
+							title: 'Pinky\'s Consideration',
+							content: 'Interesting... You think like a strategist. Perhaps we could find a mutually beneficial arrangement.',
+							character: 'pinky-ghost'
+						}
+					},
+					{
+						id: 'successful-negotiation',
+						type: 'end',
+						position: { x: 100, y: 450 },
+						data: {
+							title: 'Diplomatic Victory',
+							content: 'Through careful negotiation, you\'ve achieved an unprecedented alliance!'
+						}
+					},
+					{
+						id: 'negotiation-failed',
+						type: 'end',
+						position: { x: 200, y: 450 },
+						data: {
+							title: 'Diplomatic Failure',
+							content: 'The negotiations break down, but you gained valuable experience in ghost psychology.'
+						}
+					}
+				],
+				connections: [
+					{ id: 'complex-conn1', source: 'scene-setup', target: 'blinky-aggressive' },
+					{ id: 'complex-conn2', source: 'blinky-aggressive', target: 'pinky-strategic' },
+					{ id: 'complex-conn3', source: 'pinky-strategic', target: 'negotiation-choice' },
+					{ id: 'complex-conn4', source: 'negotiation-choice', target: 'leadership-path', sourceHandle: 'appeal-blinky' },
+					{ id: 'complex-conn5', source: 'negotiation-choice', target: 'strategic-alliance', sourceHandle: 'work-with-pinky' },
+					{ id: 'complex-conn6', source: 'leadership-path', target: 'successful-negotiation', targetHandle: 'true' },
+					{ id: 'complex-conn7', source: 'leadership-path', target: 'negotiation-failed', targetHandle: 'false' },
+					{ id: 'complex-conn8', source: 'strategic-alliance', target: 'successful-negotiation' }
+				],
+				startNodeId: 'scene-setup',
+				createdAt: new Date('2025-05-31'),
+				updatedAt: new Date('2025-05-31')
+			};
+
+			// Validate complex tree structure
+			expect(complexTree.nodes).toHaveLength(8);
+			expect(complexTree.connections).toHaveLength(8);
+
+			// Validate multiple character involvement
+			const charactersInTree = complexTree.nodes
+				.map(n => n.data.character)
+				.filter(Boolean);
+			const uniqueCharacters = [...new Set(charactersInTree)];
+			expect(uniqueCharacters).toHaveLength(3); // pac-man, blinky, pinky
+
+			// Validate conditional logic presence
+			const conditionalNodes = complexTree.nodes.filter(n => n.type === 'conditional');
+			expect(conditionalNodes).toHaveLength(1);
+			expect(conditionalNodes[0].data.condition).toContain('playerDiplomacy');
+
+			// Validate multiple ending scenarios
+			const endNodes = complexTree.nodes.filter(n => n.type === 'end');
+			expect(endNodes).toHaveLength(2);
+			expect(endNodes.some(n => n.data.title?.includes('Victory'))).toBe(true);
+			expect(endNodes.some(n => n.data.title?.includes('Failure'))).toBe(true);
+		});
 	})
 })
