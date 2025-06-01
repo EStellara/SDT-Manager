@@ -15,23 +15,77 @@ interface ExportImportPanelProps {
 export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 	const { state, dispatch } = useDialogProject();
 	const [importData, setImportData] = useState("");
+	const [exportFormat, setExportFormat] = useState<"json" | "yaml" | "xml">("json");
+	const [importError, setImportError] = useState<string | null>(null);
+	const [exportSuccess, setExportSuccess] = useState<string | null>(null);
 
 	if (!isOpen) return null;
 
 	const exportProject = () => {
 		if (!state.currentProject) return;
 
-		const dataStr = JSON.stringify(state.currentProject, null, 2);
-		const dataBlob = new Blob([dataStr], { type: "application/json" });
-		const url = URL.createObjectURL(dataBlob);
+		try {
+			let dataStr: string;
+			let fileName: string;
+			let mimeType: string;
 
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = `${state.currentProject.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_project.json`;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		URL.revokeObjectURL(url);
+			const projectName = state.currentProject.name.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+
+			switch (exportFormat) {
+				case "json":
+					dataStr = JSON.stringify(state.currentProject, null, 2);
+					fileName = `${projectName}_project.json`;
+					mimeType = "application/json";
+					break;
+				case "yaml":
+					// Simple YAML export (in a real app, you'd use a YAML library)
+					dataStr =
+						`# Dialog Project: ${state.currentProject.name}\n` +
+						`name: "${state.currentProject.name}"\n` +
+						`description: "${state.currentProject.description || ""}"\n` +
+						`created: ${state.currentProject.createdAt.toISOString()}\n` +
+						`trees: ${state.currentProject.dialogTrees.length}\n` +
+						`characters: ${state.currentProject.characters.length}\n` +
+						`\n# Note: This is a simplified YAML export for reference only`;
+					fileName = `${projectName}_project.yaml`;
+					mimeType = "text/yaml";
+					break;
+				case "xml":
+					// Simple XML export
+					dataStr =
+						`<?xml version="1.0" encoding="UTF-8"?>\n` +
+						`<dialogProject>\n` +
+						`  <name>${state.currentProject.name}</name>\n` +
+						`  <description>${state.currentProject.description || ""}</description>\n` +
+						`  <trees count="${state.currentProject.dialogTrees.length}" />\n` +
+						`  <characters count="${state.currentProject.characters.length}" />\n` +
+						`  <!-- Full project data: ${JSON.stringify(state.currentProject)
+							.replace(/</g, "&lt;")
+							.replace(/>/g, "&gt;")} -->\n` +
+						`</dialogProject>`;
+					fileName = `${projectName}_project.xml`;
+					mimeType = "application/xml";
+					break;
+			}
+
+			const dataBlob = new Blob([dataStr], { type: mimeType });
+			const url = URL.createObjectURL(dataBlob);
+
+			const link = document.createElement("a");
+			link.href = url;
+			link.download = fileName;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+
+			setExportSuccess(`Project exported as ${fileName}`);
+			setTimeout(() => setExportSuccess(null), 3000);
+		} catch (error) {
+			console.error("Export failed:", error);
+			setImportError("Failed to export project");
+			setTimeout(() => setImportError(null), 3000);
+		}
 	};
 
 	const exportCurrentTree = () => {
@@ -61,35 +115,59 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 		document.body.removeChild(link);
 		URL.revokeObjectURL(url);
 	};
-
 	const importProject = () => {
 		try {
+			setImportError(null);
 			const projectData: DialogProject = JSON.parse(importData);
 
-			// Validate the structure
+			// Enhanced validation
 			if (!projectData.id || !projectData.name || !projectData.dialogTrees) {
-				throw new Error("Invalid project format");
+				throw new Error("Invalid project format - missing required fields");
 			}
+
+			if (!Array.isArray(projectData.dialogTrees)) {
+				throw new Error("Invalid project format - dialogTrees must be an array");
+			}
+
+			if (!Array.isArray(projectData.characters)) {
+				throw new Error("Invalid project format - characters must be an array");
+			}
+
+			// Validate each dialog tree
+			projectData.dialogTrees.forEach((tree, index) => {
+				if (!tree.id || !tree.name || !Array.isArray(tree.nodes)) {
+					throw new Error(`Invalid dialog tree at index ${index}`);
+				}
+			});
 
 			dispatch({ type: "LOAD_PROJECT", payload: projectData });
 			setImportData("");
+			setExportSuccess("Project imported successfully!");
+			setTimeout(() => setExportSuccess(null), 3000);
 			onClose();
 		} catch (error) {
-			alert("Error importing project: " + (error as Error).message);
+			const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+			setImportError("Error importing project: " + errorMessage);
+			setTimeout(() => setImportError(null), 5000);
 		}
 	};
-
 	const importTree = () => {
 		try {
+			setImportError(null);
 			const treeData = JSON.parse(importData);
 
-			// Validate tree export format
+			// Enhanced validation for tree export format
 			if (!treeData.tree || !treeData.tree.id || !treeData.tree.name) {
-				throw new Error("Invalid tree export format");
+				throw new Error("Invalid tree export format - missing tree data");
+			}
+
+			if (!Array.isArray(treeData.tree.nodes)) {
+				throw new Error("Invalid tree format - nodes must be an array");
 			}
 
 			if (!state.currentProject) {
-				alert("Please create or load a project first");
+				setImportError("Please create or load a project first");
+				setTimeout(() => setImportError(null), 3000);
 				return;
 			}
 
@@ -126,9 +204,13 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 			});
 
 			setImportData("");
+			setExportSuccess("Dialog tree imported successfully!");
+			setTimeout(() => setExportSuccess(null), 3000);
 			onClose();
 		} catch (error) {
-			alert("Error importing tree: " + (error as Error).message);
+			const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+			setImportError("Error importing tree: " + errorMessage);
+			setTimeout(() => setImportError(null), 5000);
 		}
 	};
 
@@ -155,9 +237,41 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 				</CardHeader>
 
 				<CardContent className="space-y-6">
+					{" "}
 					{/* Export Section */}
 					<div className="space-y-4">
 						<h3 className="text-lg font-semibold">Export</h3>
+
+						{/* Export format selector */}
+						<div className="space-y-2">
+							<Label>Export Format</Label>
+							<div className="flex gap-2">
+								<Button
+									type="button"
+									variant={exportFormat === "json" ? "default" : "outline"}
+									size="sm"
+									onClick={() => setExportFormat("json")}
+								>
+									JSON
+								</Button>
+								<Button
+									type="button"
+									variant={exportFormat === "yaml" ? "default" : "outline"}
+									size="sm"
+									onClick={() => setExportFormat("yaml")}
+								>
+									YAML
+								</Button>
+								<Button
+									type="button"
+									variant={exportFormat === "xml" ? "default" : "outline"}
+									size="sm"
+									onClick={() => setExportFormat("xml")}
+								>
+									XML
+								</Button>
+							</div>
+						</div>
 
 						<div className="grid grid-cols-2 gap-4">
 							<Button
@@ -187,11 +301,22 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 								</div>
 							</Button>
 						</div>
-					</div>
-
+					</div>{" "}
 					{/* Import Section */}
 					<div className="space-y-4">
 						<h3 className="text-lg font-semibold">Import</h3>
+
+						{/* Error/Success Messages */}
+						{importError && (
+							<div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded text-sm">
+								{importError}
+							</div>
+						)}
+						{exportSuccess && (
+							<div className="bg-green-100 border border-green-300 text-green-700 px-3 py-2 rounded text-sm">
+								{exportSuccess}
+							</div>
+						)}
 
 						<div className="space-y-4">
 							<div className="space-y-2">
@@ -244,7 +369,6 @@ export function ExportImportPanel({ isOpen, onClose }: ExportImportPanelProps) {
 							</div>
 						</div>
 					</div>
-
 					{/* Actions */}
 					<div className="flex justify-end gap-2 pt-4 border-t">
 						<Button variant="outline" onClick={onClose}>
