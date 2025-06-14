@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Drag and Drop Test</title>
+		<style>
+			.drag-zone {
+				border: 2px dashed #ccc;
+				padding: 20px;
+				margin: 20px;
+				min-height: 100px;
+				background: #f9f9f9;
+				transition: all 0.2s ease-in-out;
+			}
+
+			.drag-zone.drag-over {
+				border-color: #007bff;
+				background: #e7f3ff;
+				transform: scale(1.02);
+			}
+
+			.drag-indicator {
+				text-align: center;
+				padding: 10px;
+				margin: 10px 0;
+				background: #d4edda;
+				border: 1px solid #c3e6cb;
+				border-radius: 4px;
+				color: #155724;
+				display: none;
+			}
+
+			.drag-indicator.show {
+				display: block;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Drag and Drop Test for SDT Manager</h1>
+
+		<div class="drag-zone" id="dropZone">
+			<h3>📁 Open Existing Project</h3>
+			<p>Load a dialog tree project from your computer (JSON or ZIP)</p>
+			<p><small>📤 Click to browse or drag & drop files here</small></p>
+
+			<div class="drag-indicator" id="dragIndicator">📁 Drop your project file here</div>
+
+			<button onclick="openFilePicker()">Browse Files</button>
+		</div>
+
+		<div id="results">
+			<h3>Test Results:</h3>
+			<div id="log"></div>
+		</div>
+
+		<script>
+			let dragCounter = 0;
+
+			function log(message) {
+				const logDiv = document.getElementById("log");
+				logDiv.innerHTML += "<div>" + new Date().toLocaleTimeString() + ": " + message + "</div>";
+			}
+
+			function openFilePicker() {
+				const input = document.createElement("input");
+				input.type = "file";
+				input.accept = ".json,.zip";
+				input.onchange = function (e) {
+					if (e.target.files.length > 0) {
+						const file = e.target.files[0];
+						log("File selected via picker: " + file.name + " (" + file.type + ")");
+					}
+				};
+				input.click();
+			}
+
+			const dropZone = document.getElementById("dropZone");
+			const dragIndicator = document.getElementById("dragIndicator");
+
+			dropZone.addEventListener("dragenter", function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				dragCounter++;
+
+				log("Drag enter event - counter: " + dragCounter);
+
+				if (e.dataTransfer && e.dataTransfer.items) {
+					dropZone.classList.add("drag-over");
+					dragIndicator.classList.add("show");
+				}
+			});
+
+			dropZone.addEventListener("dragleave", function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				dragCounter--;
+
+				log("Drag leave event - counter: " + dragCounter);
+
+				if (dragCounter === 0) {
+					dropZone.classList.remove("drag-over");
+					dragIndicator.classList.remove("show");
+				}
+			});
+
+			dropZone.addEventListener("dragover", function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+
+				if (e.dataTransfer) {
+					e.dataTransfer.dropEffect = "copy";
+				}
+			});
+
+			dropZone.addEventListener("drop", function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				dragCounter = 0;
+
+				dropZone.classList.remove("drag-over");
+				dragIndicator.classList.remove("show");
+
+				log("Drop event triggered");
+
+				const files = e.dataTransfer.files;
+				if (files && files.length > 0) {
+					const acceptedExtensions = [".json", ".zip"];
+					const acceptedFiles = [];
+
+					for (let i = 0; i < files.length; i++) {
+						const file = files[i];
+						const extension = "." + file.name.split(".").pop().toLowerCase();
+
+						log("Processing file: " + file.name + " (extension: " + extension + ")");
+
+						if (acceptedExtensions.includes(extension)) {
+							acceptedFiles.push(file);
+							log("✅ File accepted: " + file.name);
+						} else {
+							log("❌ File rejected (unsupported type): " + file.name);
+						}
+					}
+
+					if (acceptedFiles.length > 0) {
+						log("🎉 Would import " + acceptedFiles.length + " file(s)");
+						acceptedFiles.forEach((file) => {
+							log("   - " + file.name + " (" + file.size + " bytes)");
+						});
+					} else {
+						log("⚠️ No valid files to import");
+					}
+				} else {
+					log("❌ No files in drop event");
+				}
+			});
+
+			log("Drag and drop test initialized");
+			log("Try dragging JSON or ZIP files onto the drop zone above");
+		</script>
+	</body>
+</html>

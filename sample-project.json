@@ -1,0 +1,244 @@
+{
+	"id": "sample-project-001",
+	"name": "Sample Adventure Dialog",
+	"description": "A sample project demonstrating dialog tree functionality with multiple characters and branching conversations",
+	"characters": [
+		{
+			"id": "char-hero",
+			"name": "Hero",
+			"displayName": "The Brave Hero",
+			"description": "The main protagonist of our adventure",
+			"color": "#3b82f6",
+			"role": "Protagonist",
+			"personality": [
+				"Brave",
+				"Determined",
+				"Curious"
+			],
+			"voiceProfile": {
+				"tone": "Heroic",
+				"accent": "Noble",
+				"speed": "normal"
+			},
+			"createdAt": "2025-06-14T00:00:00.000Z",
+			"updatedAt": "2025-06-14T00:00:00.000Z"
+		},
+		{
+			"id": "char-merchant",
+			"name": "Merchant",
+			"displayName": "Wise Merchant",
+			"description": "A knowledgeable trader with many stories to tell",
+			"color": "#f59e0b",
+			"role": "NPC",
+			"personality": [
+				"Wise",
+				"Greedy",
+				"Talkative"
+			],
+			"voiceProfile": {
+				"tone": "Friendly",
+				"accent": "Merchant",
+				"speed": "fast"
+			},
+			"createdAt": "2025-06-14T00:00:00.000Z",
+			"updatedAt": "2025-06-14T00:00:00.000Z"
+		},
+		{
+			"id": "char-guard",
+			"name": "Guard",
+			"displayName": "City Guard",
+			"description": "A stern but fair guardian of the city gates",
+			"color": "#ef4444",
+			"role": "NPC",
+			"personality": [
+				"Stern",
+				"Dutiful",
+				"Protective"
+			],
+			"voiceProfile": {
+				"tone": "Authoritative",
+				"accent": "Military",
+				"speed": "normal"
+			},
+			"createdAt": "2025-06-14T00:00:00.000Z",
+			"updatedAt": "2025-06-14T00:00:00.000Z"
+		}
+	],
+	"dialogTrees": [
+		{
+			"id": "tree-opening",
+			"name": "Opening Conversation",
+			"description": "The first conversation when entering the town",
+			"nodes": [
+				{
+					"id": "node-start",
+					"type": "npc",
+					"position": {
+						"x": 100,
+						"y": 100
+					},
+					"data": {
+						"title": "Guard's Greeting",
+						"content": "Halt! State your business in our fair city, traveler.",
+						"character": "char-guard"
+					}
+				},
+				{
+					"id": "node-choice",
+					"type": "player_choice",
+					"position": {
+						"x": 100,
+						"y": 250
+					},
+					"data": {
+						"title": "Your Response",
+						"content": "How do you respond to the guard?",
+						"choices": [
+							{
+								"id": "choice-trade",
+								"text": "I'm here to trade goods"
+							},
+							{
+								"id": "choice-adventure",
+								"text": "I seek adventure and glory!"
+							},
+							{
+								"id": "choice-passing",
+								"text": "Just passing through"
+							}
+						]
+					}
+				},
+				{
+					"id": "node-trade-response",
+					"type": "npc",
+					"position": {
+						"x": 50,
+						"y": 400
+					},
+					"data": {
+						"title": "Guard's Trade Response",
+						"content": "Ah, a merchant! Head to the marketplace. Speak with the Wise Merchant - he'll set you up properly.",
+						"character": "char-guard"
+					}
+				},
+				{
+					"id": "node-adventure-response",
+					"type": "npc",
+					"position": {
+						"x": 150,
+						"y": 400
+					},
+					"data": {
+						"title": "Guard's Adventure Response",
+						"content": "Adventure, eh? Well, we could use someone brave. There have been strange happenings in the old forest...",
+						"character": "char-guard"
+					}
+				}
+			],
+			"connections": [
+				{
+					"id": "conn-1",
+					"source": "node-start",
+					"target": "node-choice"
+				},
+				{
+					"id": "conn-2",
+					"source": "node-choice",
+					"target": "node-trade-response",
+					"sourceHandle": "choice-trade"
+				},
+				{
+					"id": "conn-3",
+					"source": "node-choice",
+					"target": "node-adventure-response",
+					"sourceHandle": "choice-adventure"
+				}
+			],
+			"createdAt": "2025-06-14T00:00:00.000Z",
+			"updatedAt": "2025-06-14T00:00:00.000Z"
+		},
+		{
+			"id": "tree-merchant",
+			"name": "Merchant Dialog",
+			"description": "Conversation with the wise merchant in the marketplace",
+			"nodes": [
+				{
+					"id": "node-merchant-greeting",
+					"type": "npc",
+					"position": {
+						"x": 100,
+						"y": 100
+					},
+					"data": {
+						"title": "Merchant's Welcome",
+						"content": "Welcome, welcome! I have the finest goods in all the land. What brings you to my humble shop?",
+						"character": "char-merchant"
+					}
+				},
+				{
+					"id": "node-merchant-choice",
+					"type": "player_choice",
+					"position": {
+						"x": 100,
+						"y": 250
+					},
+					"data": {
+						"title": "Shopping Options",
+						"content": "What would you like to do?",
+						"choices": [
+							{
+								"id": "choice-buy",
+								"text": "I'd like to buy something"
+							},
+							{
+								"id": "choice-sell",
+								"text": "I have items to sell"
+							},
+							{
+								"id": "choice-info",
+								"text": "Tell me about the local area"
+							}
+						]
+					}
+				},
+				{
+					"id": "node-merchant-info",
+					"type": "npc",
+					"position": {
+						"x": 100,
+						"y": 400
+					},
+					"data": {
+						"title": "Local Information",
+						"content": "Ah, you want to know about our town? Well, we've had some troubles lately. Strange creatures in the forest, missing travelers... but enough of that! Let's talk business!",
+						"character": "char-merchant"
+					}
+				}
+			],
+			"connections": [
+				{
+					"id": "conn-m1",
+					"source": "node-merchant-greeting",
+					"target": "node-merchant-choice"
+				},
+				{
+					"id": "conn-m2",
+					"source": "node-merchant-choice",
+					"target": "node-merchant-info",
+					"sourceHandle": "choice-info"
+				}
+			],
+			"createdAt": "2025-06-14T00:00:00.000Z",
+			"updatedAt": "2025-06-14T00:00:00.000Z"
+		}
+	],
+	"variables": {
+		"playerGold": 100,
+		"reputation": 0,
+		"hasVisitedMerchant": false,
+		"questActive": false
+	},
+	"createdAt": "2025-06-14T00:00:00.000Z",
+	"updatedAt": "2025-06-14T00:00:00.000Z"
+}

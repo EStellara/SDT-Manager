@@ -60,3 +60,19 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 }
+
+@layer components {
+  /* Drag and drop styles */
+  .drag-zone {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  .drag-zone.drag-over {
+    @apply border-primary border-2 border-dashed bg-primary/5;
+    transform: scale(1.02);
+  }
+  
+  .drag-zone:hover {
+    @apply border-primary/50;
+  }
+}
