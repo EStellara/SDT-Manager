@@ -1,5 +1,5 @@
-// 🔗 LINKY - The ghost who tests our dialog project page
-// Linky connects different parts, perfect for testing the integrated dialog project functionality
+// 🔗 SPECTER - The ghost who tests our dialog project page
+// Specter haunts complex systems, perfect for testing the integrated dialog project functionality
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -35,7 +35,7 @@ const renderDialogProjectPage = () => {
 	);
 };
 
-describe("🔗 Linky: DialogProjectPage Tests", () => {
+describe("🔗 Specter: DialogProjectPage Tests", () => {
 	describe("Page Structure", () => {
 		it("should render the main page layout", () => {
 			renderDialogProjectPage();
@@ -70,11 +70,11 @@ describe("🔗 Linky: DialogProjectPage Tests", () => {
 			const { container } = renderDialogProjectPage();
 
 			// Check that the main container exists
-			const mainContainer = container.querySelector('.min-h-screen');
+			const mainContainer = container.querySelector(".min-h-screen");
 			expect(mainContainer).toBeInTheDocument();
 
 			// Check that flex layout is applied
-			const flexContainer = container.querySelector('.flex');
+			const flexContainer = container.querySelector(".flex");
 			expect(flexContainer).toBeInTheDocument();
 		});
 
@@ -96,14 +96,9 @@ describe("🔗 Linky: DialogProjectPage Tests", () => {
 			renderDialogProjectPage();
 
 			// Verify all components are present
-			const components = [
-				"dialog-project-provider",
-				"project-sidebar", 
-				"dialog-tree-editor",
-				"theme-toggle"
-			];
+			const components = ["dialog-project-provider", "project-sidebar", "dialog-tree-editor", "theme-toggle"];
 
-			components.forEach(testId => {
+			components.forEach((testId) => {
 				expect(screen.getByTestId(testId)).toBeInTheDocument();
 			});
 		});
@@ -129,10 +124,10 @@ describe("🔗 Linky: DialogProjectPage Tests", () => {
 			const { container } = renderDialogProjectPage();
 
 			// Check for responsive utility classes
-			const responsiveElement = container.querySelector('.min-h-screen');
+			const responsiveElement = container.querySelector(".min-h-screen");
 			expect(responsiveElement).toBeInTheDocument();
 
-			const flexElement = container.querySelector('.flex');
+			const flexElement = container.querySelector(".flex");
 			expect(flexElement).toBeInTheDocument();
 		});
 	});

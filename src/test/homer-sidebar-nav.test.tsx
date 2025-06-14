@@ -1,5 +1,5 @@
-// 🏠🔗 HOMER - The ghost who tests sidebar navigation
-// Homer knows the way home, perfect for testing navigation from the sidebar
+// 🏠🔗 ORSON - The ghost who tests sidebar navigation
+// Orson is wise and navigational, perfect for testing navigation from the sidebar
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -24,12 +24,12 @@ const renderProjectSidebar = () => {
 		<BrowserRouter>
 			<DialogProjectProvider>
 				<ProjectSidebar />
-			</DialogProjectProvider>
+			</DialogProjectProvider>{" "}
 		</BrowserRouter>
 	);
 };
 
-describe("🏠🔗 Homer: ProjectSidebar Navigation Tests", () => {
+describe("🏠🔗 Orson: ProjectSidebar Navigation Tests", () => {
 	beforeEach(() => {
 		mockNavigate.mockClear();
 	});
@@ -62,7 +62,7 @@ describe("🏠🔗 Homer: ProjectSidebar Navigation Tests", () => {
 			renderProjectSidebar();
 
 			const homeButton = screen.getByRole("button", { name: /go to home/i });
-			
+
 			// Button should be present and properly labeled
 			expect(homeButton).toBeInTheDocument();
 			expect(homeButton).toHaveAttribute("title", "Go to Home");
@@ -85,10 +85,10 @@ describe("🏠🔗 Homer: ProjectSidebar Navigation Tests", () => {
 
 			// Title should still be present
 			expect(screen.getByText("Stellar Dialog Tree Manager")).toBeInTheDocument();
-			
+
 			// Home button should be present
 			expect(screen.getByRole("button", { name: /go to home/i })).toBeInTheDocument();
-			
+
 			// Other sidebar functionality should still work
 			// (Note: More specific tests would be in dedicated ProjectSidebar test files)
 		});
@@ -100,7 +100,7 @@ describe("🏠🔗 Homer: ProjectSidebar Navigation Tests", () => {
 
 			const homeButton = screen.getByRole("button", { name: /go to home/i });
 			expect(homeButton).toBeInTheDocument();
-			
+
 			// The button should contain the home icon
 			// This is a basic check that the button renders properly
 			expect(homeButton).toHaveAttribute("title", "Go to Home");
@@ -113,7 +113,7 @@ describe("🏠🔗 Homer: ProjectSidebar Navigation Tests", () => {
 
 			const homeButton = screen.getByRole("button", { name: /go to home/i });
 			expect(homeButton).toBeInTheDocument();
-			
+
 			// Button should be consistently available
 			expect(homeButton).toHaveAttribute("title", "Go to Home");
 		});

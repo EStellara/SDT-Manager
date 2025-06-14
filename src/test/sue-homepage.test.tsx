@@ -1,5 +1,5 @@
-// 🏠 SUE - The ghost who tests our home page navigation
-// Sue is methodical and organized, perfect for testing the home page functionality
+// 🏠 SPUNKY - The ghost who tests our home page navigation
+// Spunky is energetic and organized, perfect for testing the home page functionality
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -26,7 +26,7 @@ const renderHomePage = () => {
 	);
 };
 
-describe("🏠 Sue: HomePage Tests", () => {
+describe("🏠 Spunky: HomePage Tests", () => {
 	beforeEach(() => {
 		mockNavigate.mockClear();
 	});
@@ -36,7 +36,9 @@ describe("🏠 Sue: HomePage Tests", () => {
 			renderHomePage();
 
 			expect(screen.getByText("SDT Manager")).toBeInTheDocument();
-			expect(screen.getByText("Create and manage your dialog trees for interactive storytelling")).toBeInTheDocument();
+			expect(
+				screen.getByText("Create and manage your dialog trees for interactive storytelling")
+			).toBeInTheDocument();
 		});
 
 		it("should render the create new project card", () => {
@@ -60,7 +62,7 @@ describe("🏠 Sue: HomePage Tests", () => {
 
 			expect(screen.getByText("Recent Projects")).toBeInTheDocument();
 			expect(screen.getByText("Continue working on your recent dialog trees")).toBeInTheDocument();
-			
+
 			// Check for sample recent projects
 			expect(screen.getByText("Adventure Game Dialog")).toBeInTheDocument();
 			expect(screen.getByText("NPC Conversation System")).toBeInTheDocument();
@@ -84,7 +86,7 @@ describe("🏠 Sue: HomePage Tests", () => {
 			const createButton = screen.getByRole("button", { name: /create project/i });
 
 			await user.type(projectNameInput, "Test Project");
-			
+
 			expect(createButton).toBeEnabled();
 		});
 
@@ -164,7 +166,7 @@ describe("🏠 Sue: HomePage Tests", () => {
 
 			const buttons = screen.getAllByRole("button");
 			expect(buttons.length).toBeGreaterThan(0);
-			
+
 			// Check that important buttons are present
 			expect(screen.getByRole("button", { name: /create project/i })).toBeInTheDocument();
 			expect(screen.getByRole("button", { name: /browse files/i })).toBeInTheDocument();

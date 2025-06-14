@@ -1,5 +1,5 @@
-// 🎯 PACMAN - The ghost who tests our routing system
-// Pacman navigates through mazes, perfect for testing route navigation
+// 🎯 BETRAYUS - The ghost who tests our routing system
+// Betrayus navigates through dimensions and mazes, perfect for testing route navigation
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -26,7 +26,7 @@ const renderAppWithRoute = (initialEntries: string[]) => {
 	);
 };
 
-describe("🎯 Pacman: App Routing Tests", () => {
+describe("🎯 Betrayus: App Routing Tests", () => {
 	describe("Route Navigation", () => {
 		it("should render HomePage when navigating to root path", () => {
 			renderAppWithRoute(["/"]);
@@ -69,20 +69,22 @@ describe("🎯 Pacman: App Routing Tests", () => {
 
 			expect(screen.getByTestId("dialog-project-page")).toBeInTheDocument();
 		});
-	});	describe("Browser Navigation", () => {
+	});
+	describe("Browser Navigation", () => {
 		it("should handle different routes properly", () => {
 			// Test home route
 			const { unmount: unmountHome } = renderAppWithRoute(["/"]);
 			expect(screen.getByTestId("home-page")).toBeInTheDocument();
 			unmountHome();
 
-			// Test project route  
+			// Test project route
 			const { unmount: unmountProject } = renderAppWithRoute(["/project"]);
 			expect(screen.getByTestId("dialog-project-page")).toBeInTheDocument();
 			unmountProject();
 
 			// Test 404 route
-			const { unmount: unmount404 } = renderAppWithRoute(["/unknown"]);			expect(screen.getByTestId("not-found-page")).toBeInTheDocument();
+			const { unmount: unmount404 } = renderAppWithRoute(["/unknown"]);
+			expect(screen.getByTestId("not-found-page")).toBeInTheDocument();
 			unmount404();
 		});
 	});
@@ -111,8 +113,8 @@ describe("🎯 Pacman: App Routing Tests", () => {
 	describe("App Component Structure", () => {
 		it("should render without crashing on all valid routes", () => {
 			const routes = ["/", "/project"];
-			
-			routes.forEach(route => {
+
+			routes.forEach((route) => {
 				const { unmount } = renderAppWithRoute([route]);
 				expect(screen.getByTestId).toBeDefined();
 				unmount();

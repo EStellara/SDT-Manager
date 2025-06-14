@@ -1,5 +1,5 @@
-// 🚫 FUNKY - The ghost who tests our 404 error handling
-// Funky appears when things go wrong, perfect for testing error pages
+// 🚫 GLITCHY - The ghost who tests our 404 error handling
+// Glitchy appears when things go wrong, perfect for testing error pages and glitches
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -26,7 +26,7 @@ const renderNotFoundPage = () => {
 	);
 };
 
-describe("🚫 Funky: NotFoundPage Tests", () => {
+describe("🚫 Glitchy: NotFoundPage Tests", () => {
 	beforeEach(() => {
 		mockNavigate.mockClear();
 	});
@@ -37,7 +37,9 @@ describe("🚫 Funky: NotFoundPage Tests", () => {
 
 			expect(screen.getByText("404")).toBeInTheDocument();
 			expect(screen.getByText("Page Not Found")).toBeInTheDocument();
-			expect(screen.getByText("The page you're looking for doesn't exist or may have been moved.")).toBeInTheDocument();
+			expect(
+				screen.getByText("The page you're looking for doesn't exist or may have been moved.")
+			).toBeInTheDocument();
 		});
 
 		it("should render navigation buttons", () => {
