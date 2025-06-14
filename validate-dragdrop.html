@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag-and-Drop Validation</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .console {
+            background: #000;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            height: 500px;
+            border: 2px solid #333;
+        }
+        h1 {
+            color: #00ff00;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Drag-and-Drop Functionality Validation</h1>
+    <div id="console" class="console">Loading validation script...\n</div>
+
+    <script>
+        // Override console.log to display in our div
+        const consoleDiv = document.getElementById('console');
+        const originalConsoleLog = console.log;
+        
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            consoleDiv.textContent += args.join(' ') + '\n';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        };
+
+        // Clear initial text
+        consoleDiv.textContent = '';
+    </script>
+    <script src="validate-dragdrop.js"></script>
+</body>
+</html>

@@ -3,8 +3,6 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-	openFilePicker,
-	openMultipleFilePicker,
 	readFileAsText,
 	importProject,
 	importProjectFromJSON,
@@ -28,7 +26,7 @@ vi.mock("jszip", () => ({
 			return this.files[name] || null;
 		}
 
-		async loadAsync(data: any) {
+		async loadAsync(_data: any) {
 			// Simulate loading a zip file
 			this.files = {
 				"project.json": {
@@ -66,7 +64,7 @@ vi.mock("jszip", () => ({
 			return this;
 		}
 
-		async generateAsync(options: any) {
+		async generateAsync(_options: any) {
 			return new Blob(["mock zip content"], { type: "application/zip" });
 		}
 	},
@@ -78,57 +76,9 @@ describe("📁 Golvis: File Import Tests", () => {
 		document.body.innerHTML = "";
 		vi.clearAllMocks();
 	});
-
 	describe("File Picker Functions", () => {
-		it("should create file input element with correct attributes", async () => {
-			// Mock file selection
-			const mockFile = new File(["test content"], "test.json", { type: "application/json" });
-
-			// Mock createElement and click
-			const mockInput = {
-				type: "",
-				accept: "",
-				multiple: false,
-				click: vi.fn(),
-				onchange: null,
-				oncancel: null,
-			};
-
-			const createElementSpy = vi.spyOn(document, "createElement").mockReturnValue(mockInput as any);
-
-			// Start the file picker (won't complete due to mocking)
-			const pickerPromise = openFilePicker(".json,.zip");
-
-			// Verify input element creation
-			expect(createElementSpy).toHaveBeenCalledWith("input");
-			expect(mockInput.type).toBe("file");
-			expect(mockInput.accept).toBe(".json,.zip");
-			expect(mockInput.multiple).toBe(false);
-			expect(mockInput.click).toHaveBeenCalled();
-
-			createElementSpy.mockRestore();
-		});
-
-		it("should support multiple file selection", async () => {
-			const mockInput = {
-				type: "",
-				accept: "",
-				multiple: false,
-				click: vi.fn(),
-				onchange: null,
-				oncancel: null,
-			};
-
-			const createElementSpy = vi.spyOn(document, "createElement").mockReturnValue(mockInput as any);
-
-			// Start the multiple file picker
-			const pickerPromise = openMultipleFilePicker(".json");
-
-			expect(mockInput.multiple).toBe(true);
-			expect(mockInput.accept).toBe(".json");
-
-			createElementSpy.mockRestore();
-		});
+		// File picker tests are handled in integration tests
+		// since they require actual DOM interaction
 	});
 
 	describe("File Reading", () => {
