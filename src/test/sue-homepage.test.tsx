@@ -2,7 +2,7 @@
 // Spunky is energetic and organized, perfect for testing the home page functionality
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import { HomePage } from "@/pages/HomePage";
@@ -65,12 +65,11 @@ describe("🏠 Spunky: HomePage Tests", () => {
 			expect(screen.getByText("Start building a new dialog tree from scratch")).toBeInTheDocument();
 			expect(screen.getByPlaceholderText("Enter project name...")).toBeInTheDocument();
 		});
-
 		it("should render the open existing project card", () => {
 			renderHomePage();
 
 			expect(screen.getByText("Open Existing Project")).toBeInTheDocument();
-			expect(screen.getByText("Load a dialog tree project from your computer")).toBeInTheDocument();
+			expect(screen.getByText("Load a dialog tree project from your computer (JSON or ZIP)")).toBeInTheDocument();
 			expect(screen.getByRole("button", { name: /browse files/i })).toBeInTheDocument();
 		});
 
@@ -131,9 +130,25 @@ describe("🏠 Spunky: HomePage Tests", () => {
 
 			expect(mockNavigate).toHaveBeenCalledWith("/project");
 		});
-
 		it("should navigate to project page when browse files button is clicked", async () => {
+			const { openFilePicker, importProject } = await import("@/lib/fileImport");
 			const user = userEvent.setup();
+
+			const mockFile = new File(["test content"], "test.json", { type: "application/json" });
+			const mockProject = {
+				id: "test-project",
+				name: "Test Project",
+				description: "A test project",
+				characters: [],
+				dialogTrees: [],
+				variables: {},
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			};
+
+			vi.mocked(openFilePicker).mockResolvedValue(mockFile);
+			vi.mocked(importProject).mockResolvedValue(mockProject);
+
 			renderHomePage();
 
 			const browseButton = screen.getByRole("button", { name: /browse files/i });
@@ -275,7 +290,10 @@ describe("🏠 Spunky: HomePage Tests", () => {
 			renderHomePage();
 
 			const browseButton = screen.getByRole("button", { name: /browse files/i });
-			await user.click(browseButton);
+
+			await act(async () => {
+				await user.click(browseButton);
+			});
 
 			// Should show loading state
 			expect(screen.getByText("Loading Project...")).toBeInTheDocument();
@@ -348,7 +366,9 @@ describe("🏠 Spunky: HomePage Tests", () => {
 				dataTransfer: new DataTransfer(),
 			});
 
-			projectCard!.dispatchEvent(dragEvent);
+			await act(async () => {
+				projectCard!.dispatchEvent(dragEvent);
+			});
 
 			// Should show drag-over indicator
 			expect(await screen.findByText("Drop your project file here")).toBeInTheDocument();
@@ -381,13 +401,14 @@ describe("🏠 Spunky: HomePage Tests", () => {
 			// Create drag event with file
 			const dataTransfer = new DataTransfer();
 			dataTransfer.items.add(mockFile);
-
 			const dropEvent = new DragEvent("drop", {
 				bubbles: true,
 				dataTransfer,
 			});
 
-			projectCard!.dispatchEvent(dropEvent);
+			await act(async () => {
+				projectCard!.dispatchEvent(dropEvent);
+			});
 
 			// Should process the file
 			expect(importProject).toHaveBeenCalledWith(mockFile);
@@ -420,13 +441,14 @@ describe("🏠 Spunky: HomePage Tests", () => {
 			// Create drag event with file
 			const dataTransfer = new DataTransfer();
 			dataTransfer.items.add(mockFile);
-
 			const dropEvent = new DragEvent("drop", {
 				bubbles: true,
 				dataTransfer,
 			});
 
-			projectCard!.dispatchEvent(dropEvent);
+			await act(async () => {
+				projectCard!.dispatchEvent(dropEvent);
+			});
 
 			// Should process the file
 			expect(importProject).toHaveBeenCalledWith(mockFile);
@@ -446,13 +468,14 @@ describe("🏠 Spunky: HomePage Tests", () => {
 			// Create drag event with file
 			const dataTransfer = new DataTransfer();
 			dataTransfer.items.add(mockFile);
-
 			const dropEvent = new DragEvent("drop", {
 				bubbles: true,
 				dataTransfer,
 			});
 
-			projectCard!.dispatchEvent(dropEvent);
+			await act(async () => {
+				projectCard!.dispatchEvent(dropEvent);
+			});
 
 			// Should not process unsupported files
 			expect(importProject).not.toHaveBeenCalled();
@@ -475,13 +498,14 @@ describe("🏠 Spunky: HomePage Tests", () => {
 			// Create drag event with file
 			const dataTransfer = new DataTransfer();
 			dataTransfer.items.add(mockFile);
-
 			const dropEvent = new DragEvent("drop", {
 				bubbles: true,
 				dataTransfer,
 			});
 
-			projectCard!.dispatchEvent(dropEvent);
+			await act(async () => {
+				projectCard!.dispatchEvent(dropEvent);
+			});
 
 			// Should show error message
 			expect(await screen.findByText(errorMessage)).toBeInTheDocument();
@@ -509,13 +533,14 @@ describe("🏠 Spunky: HomePage Tests", () => {
 			// Create drag event with file
 			const dataTransfer = new DataTransfer();
 			dataTransfer.items.add(mockFile);
-
 			const dropEvent = new DragEvent("drop", {
 				bubbles: true,
 				dataTransfer,
 			});
 
-			projectCard!.dispatchEvent(dropEvent);
+			await act(async () => {
+				projectCard!.dispatchEvent(dropEvent);
+			});
 
 			// Should show loading state
 			expect(await screen.findByText("Loading Project...")).toBeInTheDocument();
@@ -545,7 +570,9 @@ describe("🏠 Spunky: HomePage Tests", () => {
 				dataTransfer: new DataTransfer(),
 			});
 
-			projectCard!.dispatchEvent(dragEnterEvent);
+			await act(async () => {
+				projectCard!.dispatchEvent(dragEnterEvent);
+			});
 
 			// Should show drag-over indicator
 			expect(await screen.findByText("Drop your project file here")).toBeInTheDocument();
@@ -556,7 +583,9 @@ describe("🏠 Spunky: HomePage Tests", () => {
 				dataTransfer: new DataTransfer(),
 			});
 
-			projectCard!.dispatchEvent(dragLeaveEvent);
+			await act(async () => {
+				projectCard!.dispatchEvent(dragLeaveEvent);
+			});
 
 			// Should remove drag-over indicator (note: this might need a timeout in real implementation)
 			// For this test, we'll just verify the event was handled without error
